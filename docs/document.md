@@ -22,11 +22,18 @@ Golang with go module 需要 go 的版本在 1.11 / 1.12
 
 主要用于缓存 session
 
-## 架构设计
+### 架构设计
 
 MVC (Router -> Controller -> Services -> Model)
 
 // 具体流程待定，大致框架可以查看 iris 文档中的说明
+
+
+### 测试工具
+// 简易测试，并非测试框架
+
+- [postman](https://www.getpostman.com/) : 测试后端 api
+
 
 ## 参考链接
 
