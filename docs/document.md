@@ -16,7 +16,7 @@ Golang with go module 需要 go 的版本在 1.11 / 1.12
 
 ### 数据库：
 
-待定 （Mysql / Mogodb)
+待定 （Mysql / Mongodb)
 
 ### 缓存 [Redis](https://github.com/go-redis/redis)
 
@@ -27,6 +27,14 @@ Golang with go module 需要 go 的版本在 1.11 / 1.12
 MVC (Router -> Controller -> Services -> Model)
 
 // 具体流程待定，大致框架可以查看 iris 文档中的说明
+
+- Controller负责验证和转发从Router中传递过来的参数，并对请求做出应答。Controller实际与Request和Response接触。
+
+- Model负责数据操作，封装与数据库进行操作的逻辑。
+
+参考目录结构如下
+
+
 
 
 ### 测试工具

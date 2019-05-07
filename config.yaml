@@ -1,0 +1,26 @@
+dev: true
+http:
+  host: 127.0.0.1
+  port: 30233
+  session:
+    key: key
+    expires: 30
+db:
+  host: 127.0.0.1
+  port: 27017
+  db: db
+  user: user
+  password: password
+redis:
+  host: 127.0.0.1
+  port: 6379
+  password: password
+  db: 0
+yingShi:
+  appKey: your_yingshi_app_key
+  secret: your_yingshi_app_secret
+  tmpPath: .yingshi.db
+util:
+  captchaFont:
+    - assets/comic.ttf
+  reservedUserListPath: assets/reserved-usernames.json
