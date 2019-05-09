@@ -16,9 +16,14 @@ type Config struct {
 
 // HTTPConfig 服务器配置
 type HTTPConfig struct {
-	Host string `yaml:"host"` // 监听地址
-	Port string `yaml:"port"` // 监听端口
-	//Session SessionConfig `yaml:"session"` // Session配置
+	Host    string        `yaml:"host"`    // 监听地址
+	Port    string        `yaml:"port"`    // 监听端口
+	Session SessionConfig `yaml:"session"` // Session配置
+}
+
+// SessionConfig Session 配置
+type SessionConfig struct {
+	Key string `yaml:"key"` // Cookies名字
 }
 
 // DBConfig 数据库配置
@@ -32,8 +37,6 @@ type DBConfig struct {
 
 // UtilConfig 工具类配置
 type UtilConfig struct {
-	CaptchaFont          []string `yaml:"captchaFont"`
-	ReservedUserListPath string   `yaml:"reservedUserListPath"`
 }
 
 // GetConf 从文件读取配置信息
