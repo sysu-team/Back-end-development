@@ -13,6 +13,10 @@ type CommonRes struct {
 	Msg  string `json:"msg"`
 }
 
+const (
+	IdKey = "id"
+)
+
 // singleton
 var sessionManager *sessions.Sessions
 
@@ -31,6 +35,8 @@ func NewApp() *iris.Application {
 	// log the requests to the terminal.
 	app.Use(logger.New())
 
+	BindUserController(app)
+
 	return app
 }
 
@@ -42,4 +48,30 @@ func getSession() *sessions.Sessions {
 		})
 	}
 	return sessionManager
+}
+
+// 常见中间件
+// 一些接口需要微信授权状态
+// 需要是已经微信授权的用户才能进行注册
+func withLogin(ctx iris.Context) {
+	//session := sessionManager.Start(ctx)
+	id := ctx.GetHeader(IdKey)
+	if id == "" {
+		ctx.StatusCode(401)
+		_, _ = ctx.JSON(CommonRes{Code: 401, Msg: "invalid_token"})
+		return
+	}
+	//if id == "" || time.Now().Unix()-session.GetInt64Default("userTime", 0) > 86400 {
+	//	ctx.StatusCode(401)
+	//	_, _ = ctx.JSON(CommonRes{Code: 401, Msg: "invalid_token"})
+	//	return
+	//}
+	ctx.Values().Set(IdKey, id)
+	ctx.Next()
+}
+
+// 正式注册的用户，才能进行的操作
+// 通过检查数据库 / 添加特殊的字段？
+func HasRegistered(ctx iris.Context) {
+	ctx.Next()
 }

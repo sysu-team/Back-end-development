@@ -23,7 +23,7 @@ func initService(config configs.Config) {
 // Run 程序入口
 func Run(configPath string) {
 	// 初始化日志
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 	// 读取配置
 	var config configs.Config
 	config.GetConf(configPath)
