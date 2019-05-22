@@ -6,6 +6,7 @@ import (
 	"github.com/kataras/iris/middleware/recover"
 	"github.com/kataras/iris/sessions"
 	"github.com/sysu-team/Back-end-development/app/configs"
+	"github.com/sysu-team/Back-end-development/lib"
 )
 
 type CommonRes struct {
@@ -14,14 +15,15 @@ type CommonRes struct {
 }
 
 const (
-	IdKey = "id"
+	IdKey         = "id"
+	OFFLINE_DEBUG = true
 )
 
 // singleton
 var sessionManager *sessions.Sessions
 
 // InitSession 初始化 Session
-func InitSession(config configs.SessionConfig) {
+func InitSession(config *configs.SessionConfig) {
 	sessionManager = sessions.New(sessions.Config{
 		Cookie: config.Key,
 	})
@@ -30,10 +32,14 @@ func InitSession(config configs.SessionConfig) {
 // NewApp 创建服务器实例并绑定控制器
 func NewApp() *iris.Application {
 	app := iris.New()
+	// 注册中间件，顺序重要
+	// panic handler
 	// recover from any http-relative panics
 	app.Use(recover.New())
 	// log the requests to the terminal.
 	app.Use(logger.New())
+	// error handler 错误集中处理
+	app.Use(lib.NewErrorHandler())
 
 	BindUserController(app)
 
@@ -61,17 +67,6 @@ func withLogin(ctx iris.Context) {
 		_, _ = ctx.JSON(CommonRes{Code: 401, Msg: "invalid_token"})
 		return
 	}
-	//if id == "" || time.Now().Unix()-session.GetInt64Default("userTime", 0) > 86400 {
-	//	ctx.StatusCode(401)
-	//	_, _ = ctx.JSON(CommonRes{Code: 401, Msg: "invalid_token"})
-	//	return
-	//}
 	ctx.Values().Set(IdKey, id)
-	ctx.Next()
-}
-
-// 正式注册的用户，才能进行的操作
-// 通过检查数据库 / 添加特殊的字段？
-func HasRegistered(ctx iris.Context) {
 	ctx.Next()
 }

@@ -8,10 +8,11 @@ import (
 
 // Config 应用配置
 type Config struct {
-	Dev  bool       `yaml:"dev"`  // 开发模式
-	HTTP HTTPConfig `yaml:"http"` // HTTP配置
-	Db   DBConfig   `yaml:"db"`   // 数据库配置
-	Util UtilConfig `yaml:"util"` // 工具配置
+	Dev     bool       `yaml:"dev"`     // 开发模式
+	Offline bool       `yaml:"offline"` // 没有小程序 code 参与
+	HTTP    HTTPConfig `yaml:"http"`    // HTTP配置
+	Db      DBConfig   `yaml:"db"`      // 数据库配置
+	Util    UtilConfig `yaml:"util"`    // 工具配置
 }
 
 // HTTPConfig 服务器配置
@@ -28,12 +29,11 @@ type SessionConfig struct {
 
 // DBConfig 数据库配置
 type DBConfig struct {
-	Host           string `yaml:"host"`
-	Port           string `yaml:"port"`
-	DBName         string `yaml:"db"`
-	CollectionName string `yaml:"collection"`
-	User           string `yaml:"user"`
-	Password       string `yaml:"password"`
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
+	DBName   string `yaml:"db"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
 }
 
 // UtilConfig 工具类配置

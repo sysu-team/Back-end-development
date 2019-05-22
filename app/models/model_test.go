@@ -1,7 +1,6 @@
 package models
 
 import (
-	"context"
 	"github.com/sysu-team/Back-end-development/app/configs"
 	"testing"
 )
@@ -17,11 +16,35 @@ func TestInitDB(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	test := GetModel().DB.Collection("user")
+	test := GetModel().User
 	t.Log(test)
-	res, err := test.InsertOne(context.TODO(), &UserDoc{"test", "ttt", "qq"})
+
+	res := test.AddUser(&UserDoc{
+		"abc",
+		"wxm",
+		"110",
+	})
+
 	if err != nil {
 		t.Error(err)
 	}
-	t.Log(res.InsertedID)
+	t.Log(res)
+
+	user, err := test.GetUserByName("wxm")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// t.Log(user)
+
+	if user == nil {
+		t.Log("no such user")
+	} else if user.Name != "wxm" {
+		t.Fatal("some thing went wrong")
+	}
+
+}
+
+func Test(t *testing.T) {
 }

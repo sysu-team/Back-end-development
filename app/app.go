@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/app/configs"
 	"github.com/sysu-team/Back-end-development/app/controllers"
+	"github.com/sysu-team/Back-end-development/app/models"
 	"os"
 )
 
@@ -17,7 +18,7 @@ type LoginReq struct {
 }
 
 func initService(config configs.Config) {
-	controllers.InitSession(config.HTTP.Session)
+	controllers.InitSession(&config.HTTP.Session)
 }
 
 // Run 程序入口
@@ -29,8 +30,14 @@ func Run(configPath string) {
 	config.GetConf(configPath)
 	// 初始化各种服务
 	// 初始化 session
-	controllers.InitSession(config.HTTP.Session)
+	controllers.InitSession(&config.HTTP.Session)
 
+	// 初始化 database
+	if err := models.InitDB(&config.Db); err != nil {
+		panic(err)
+	}
+
+	//OFFLINE_DEBUG = config.Offline
 	// 启动服务器
 	app := controllers.NewApp()
 
@@ -40,7 +47,7 @@ func Run(configPath string) {
 	} else {
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
 	}
-
+	log.Debug().Msg(config.HTTP.Host)
 	if err := app.Run(iris.Addr(config.HTTP.Host + ":" + config.HTTP.Port)); err != nil {
 		panic(err)
 	}

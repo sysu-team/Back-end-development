@@ -10,11 +10,17 @@ import (
 	"time"
 )
 
+const (
+	UserCollectionName       = "users"
+	DelegationCollectionName = "delegations"
+)
+
 var model *Model
 
 // Model 数据库实例
 type Model struct {
-	DB *mongo.Database
+	DB   *mongo.Database
+	User *UserModel
 }
 
 // 连接到数据库
@@ -32,6 +38,7 @@ func InitDB(config *configs.DBConfig) error {
 	log.Info().Msg("Successful connect to server")
 
 	model.DB = client.Database(config.DBName)
+	model.User = NewUserModel(model.DB)
 
 	return nil
 }
