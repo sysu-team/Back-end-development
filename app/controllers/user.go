@@ -5,17 +5,16 @@ import (
 	"fmt"
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/mvc"
-	"github.com/kataras/iris/sessions"
 	"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/app/services"
 	"github.com/sysu-team/Back-end-development/lib"
 	"gopkg.in/resty.v1"
+	"time"
 )
 
 // UserController 用户控制
 type UserController struct {
-	Ctx     iris.Context
-	Session *sessions.Session
+	BaseController
 	// 使用的是 interface 而不是 struct
 	Server services.UserService
 }
@@ -33,14 +32,7 @@ func BindUserController(app *iris.Application) {
 func (c *UserController) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("POST", "/", "Post")
 	b.Handle("POST", "/session", "PostSession")
-	b.Handle("DELETE", "/session", "DelSession")
-}
-
-// TODO: 应该设置成基类 controller 的方法
-func (c *UserController) JSON(v ...interface{}) {
-	// v... 后面的三个点不能省略
-	// todo: 参数解包的原因
-	lib.JSON(c.Ctx, v...)
+	b.Handle("DELETE", "/session", "DelSession", withLogin)
 }
 
 type LoginReq struct {
@@ -96,8 +88,9 @@ func (c *UserController) PostSession() {
 	lib.Assert(wxRes.ErrCode == 0, wxRes.ErrMsg, 400)
 	lib.Assert(c.Server.HasRegistered(wxRes.OpenId), "unregister_user", 401)
 	// 维护自定义登陆状态，维护登陆状态
-	c.Session.Set("session_key", wxRes.SessionKey)
-	c.Session.Set("open_id", wxRes.OpenId)
+	c.Session.Set(IdKey, wxRes.OpenId)
+	c.Session.Set("session_key", wxRes.SessionKey) // 用于构建后续的特殊请求（可能会过期）
+	c.Session.Set(IdTimeKey, time.Now().Unix())
 	// 构建返回信息
 	userDoc := c.Server.FindUserByOpenID(wxRes.OpenId)
 	lib.Assert(userDoc != nil, "unknown error")

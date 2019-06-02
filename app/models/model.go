@@ -19,8 +19,9 @@ var model *Model
 
 // Model 数据库实例
 type Model struct {
-	DB   *mongo.Database
-	User *UserModel
+	DB         *mongo.Database
+	User       *UserModel
+	Delegation *DelegationModel
 }
 
 // 连接到数据库
@@ -39,6 +40,7 @@ func InitDB(config *configs.DBConfig) error {
 
 	model.DB = client.Database(config.DBName)
 	model.User = NewUserModel(model.DB)
+	model.Delegation = NewDelegationModel(model.DB)
 
 	return nil
 }

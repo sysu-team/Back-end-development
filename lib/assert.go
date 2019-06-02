@@ -11,7 +11,7 @@ type ErrorRes struct {
 	Msg  string
 }
 
-// Assert Web断言，产生的 panic 经由调用 chain 传播到 注册得中间件中得 error handler 中 recover 中，进行统一处理
+// Assert Web断言，产生的 panic 经由调用 chain 传播到 注册得中间件中的 error handler 中 recover 中，进行统一处理
 func Assert(condition bool, msg string, code ...int) {
 	if !condition {
 		statusCode := 400

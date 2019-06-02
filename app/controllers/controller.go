@@ -7,6 +7,7 @@ import (
 	"github.com/kataras/iris/sessions"
 	"github.com/sysu-team/Back-end-development/app/configs"
 	"github.com/sysu-team/Back-end-development/lib"
+	"time"
 )
 
 type CommonRes struct {
@@ -16,11 +17,29 @@ type CommonRes struct {
 
 const (
 	IdKey         = "id"
+	IdTimeKey     = "idTime"
 	OFFLINE_DEBUG = true
 )
 
 // singleton
 var sessionManager *sessions.Sessions
+
+type BaseController struct {
+	Ctx     iris.Context
+	Session *sessions.Session
+}
+
+func (c *BaseController) JSON(v ...interface{}) {
+	// TODO: 应该设置成基类 controller 的方法
+	// v... 后面的三个点不能省略
+	// todo: 参数解包的原因
+	lib.JSON(c.Ctx, v...)
+}
+
+type PageQuery struct {
+	Page  *int `form:"page"`
+	Limit *int `form:"limit"`
+}
 
 // InitSession 初始化 Session
 func InitSession(config *configs.SessionConfig) {
@@ -40,9 +59,8 @@ func NewApp() *iris.Application {
 	app.Use(logger.New())
 	// error handler 错误集中处理
 	app.Use(lib.NewErrorHandler())
-
 	BindUserController(app)
-
+	BindDelegationController(app)
 	return app
 }
 
@@ -58,15 +76,11 @@ func getSession() *sessions.Sessions {
 
 // 常见中间件
 // 一些接口需要微信授权状态
-// 需要是已经微信授权的用户才能进行注册
 func withLogin(ctx iris.Context) {
-	//session := sessionManager.Start(ctx)
-	id := ctx.GetHeader(IdKey)
-	if id == "" {
-		ctx.StatusCode(401)
-		_, _ = ctx.JSON(CommonRes{Code: 401, Msg: "invalid_token"})
-		return
-	}
+	session := sessionManager.Start(ctx)
+	id := session.GetString(IdKey)
+	idTime := session.GetInt64Default(IdTimeKey, 0)
+	lib.Assert(id != "" && idTime != 0 && time.Now().Unix()-idTime <= 86400, "invalid_token", 401)
 	ctx.Values().Set(IdKey, id)
 	ctx.Next()
 }

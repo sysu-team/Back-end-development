@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/json-iterator/go/extra"
 	"github.com/kataras/iris"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -23,14 +24,18 @@ func initService(config configs.Config) {
 
 // Run 程序入口
 func Run(configPath string) {
-	// 初始化日志
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+	// 初始化日志, 添加输出行号
+	log.Logger = log.With().Caller().Logger().Output(zerolog.ConsoleWriter{Out: os.Stdout})
 	// 读取配置
 	var config configs.Config
 	config.GetConf(configPath)
 	// 初始化各种服务
 	// 初始化 session
 	controllers.InitSession(&config.HTTP.Session)
+
+	// 初始化 Json 设置
+	// 自动转换成小写下划线风格
+	extra.SetNamingStrategy(extra.LowerCaseWithUnderscores)
 
 	// 初始化 database
 	if err := models.InitDB(&config.Db); err != nil {
