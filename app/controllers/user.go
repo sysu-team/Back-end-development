@@ -33,6 +33,8 @@ func (c *UserController) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("POST", "/", "Post")
 	b.Handle("POST", "/session", "PostSession")
 	b.Handle("DELETE", "/session", "DelSession", withLogin)
+	b.Handle("GET", "/me", "GetMe", withLogin)
+
 }
 
 type LoginReq struct {
@@ -56,8 +58,8 @@ func wxAuth(code string) *WxSessionRes {
 	}
 	resp, err := resty.R().
 		SetQueryParams(map[string]string{
-			"appid":      "wx296231dd4ca34b67",
-			"secret":     "e6dd8a2438d2d8201e3b6e8da0fa34b0",
+			"appid":      WxAppid,
+			"secret":     WxSecret,
 			"js_code":    code,
 			"grant_type": "authorization_code",
 		}).
@@ -70,16 +72,10 @@ func wxAuth(code string) *WxSessionRes {
 	return res
 }
 
-// login result
-type LoginRes struct {
-	Name          string `json:"name"`
-	StudentNumber string `json:"student_number"`
-}
-
 // 登陆 需要微信授权
 func (c *UserController) PostSession() {
 	// 防止重复登陆
-	lib.Assert(c.Session.Get("session_key") == nil, "already_login", 401)
+	lib.Assert(c.Session.Get(WxSessionKey) == nil, "already_login", 401)
 	// 获取请求中的code
 	body := LoginReq{}
 	lib.Assert(c.Ctx.ReadJSON(&body) == nil, "invalid_params", 400)
@@ -88,18 +84,17 @@ func (c *UserController) PostSession() {
 	lib.Assert(wxRes.ErrCode == 0, wxRes.ErrMsg, 400)
 	lib.Assert(c.Server.HasRegistered(wxRes.OpenId), "unregister_user", 401)
 	// 维护自定义登陆状态，维护登陆状态
+	log.Debug().Msg("session id : " + c.Session.ID())
 	c.Session.Set(IdKey, wxRes.OpenId)
-	c.Session.Set("session_key", wxRes.SessionKey) // 用于构建后续的特殊请求（可能会过期）
+	c.Session.Set(WxSessionKey, wxRes.SessionKey) // 用于构建后续的特殊请求（可能会过期）
 	c.Session.Set(IdTimeKey, time.Now().Unix())
 	// 构建返回信息
-	userDoc := c.Server.FindUserByOpenID(wxRes.OpenId)
-	lib.Assert(userDoc != nil, "unknown error")
-	c.JSON(200, LoginRes{userDoc.Name, userDoc.StudentNumber})
+	c.JSON(200, c.Server.GetUserInfo(wxRes.OpenId))
 }
 
 // 退出登陆
 func (c *UserController) DelSession() {
-	lib.Assert(c.Session.Get("session_key") != nil, "not_login", 401)
+	lib.Assert(c.Session.Get(IdKey) != nil, "not_login", 401)
 	c.Session.Destroy()
 	c.JSON(200)
 }
@@ -122,8 +117,14 @@ func (c *UserController) Post() {
 		wxRes.OpenId = body.Code
 	}
 	// 防止重复注册
-	lib.Assert(!c.Server.HasRegistered(wxRes.OpenId), "already_register", 400)
+	lib.Assert(!c.Server.HasRegistered(wxRes.OpenId), "duplicated_username", 401)
+	lib.Assert(!c.Server.HasRegistered(body.StudentNum), "duplicated_student_num", 402)
 	c.Server.Register(body.Name, body.StudentNum, wxRes.OpenId)
 	//lib.JSON(c.Ctx, 200)
 	c.JSON(200)
+}
+
+//  已经登陆的用户获取用户信息
+func (c *UserController) GetMe() {
+	c.JSON(200, c.Server.GetUserInfo(c.Session.GetString(IdKey)))
 }

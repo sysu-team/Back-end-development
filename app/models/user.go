@@ -14,9 +14,10 @@ type UserModel struct {
 
 // 所有字段名字都是小写的
 type UserDoc struct {
-	OpenID        string
-	Name          string
-	StudentNumber string
+	OpenID        string `bson:"open_id"`
+	Name          string `bson:"name"`
+	StudentNumber string `bson:"student_num"`
+	Credit        int    `bson:"credit"`
 }
 
 // 使用/创建 collcetion, 初始化子 model
@@ -32,19 +33,24 @@ func (m *UserModel) AddUser(newUser *UserDoc) string {
 	return res.InsertedID.(primitive.ObjectID).String()
 }
 
-func (m *UserModel) GetUserByName(name string) (*UserDoc, error) {
-	filter := bson.D{{"name", name}}
-	res := &UserDoc{}
-	err := m.db.Collection(UserCollectionName).FindOne(context.TODO(), filter).Decode(res)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+// 返回nil，代表没有找到对应的用户
+func (m *UserModel) GetUserByName(name string) *UserDoc {
+	return m.findUserBy("name", name)
+
 }
 
 // 返回nil代表没有找到该 openid 对应的用户
 func (m *UserModel) GetUserByOpenID(openid string) *UserDoc {
-	filter := bson.D{{"openid", openid}}
+	return m.findUserBy("open_id", openid)
+}
+
+// 返回nil代表没有找到该 openid 对应的用户
+func (m *UserModel) GetUserByStudentNum(studentNum string) *UserDoc {
+	return m.findUserBy("student_num", studentNum)
+}
+
+func (m *UserModel) findUserBy(key, value string) *UserDoc {
+	filter := bson.D{{key, value}}
 	res := &UserDoc{}
 	// 找不到对应的用户抛出 no document error
 	err := m.db.Collection(UserCollectionName).FindOne(context.TODO(), filter).Decode(res)

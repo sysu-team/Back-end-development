@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
 	"github.com/kataras/iris/middleware/recover"
 	"github.com/kataras/iris/sessions"
+	"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/app/configs"
 	"github.com/sysu-team/Back-end-development/lib"
 	"time"
@@ -18,7 +20,13 @@ type CommonRes struct {
 const (
 	IdKey         = "id"
 	IdTimeKey     = "idTime"
-	OFFLINE_DEBUG = true
+	WxSessionKey  = "session_key"
+	OFFLINE_DEBUG = false
+)
+
+var (
+	WxAppid  string
+	WxSecret string
 )
 
 // singleton
@@ -80,7 +88,10 @@ func withLogin(ctx iris.Context) {
 	session := sessionManager.Start(ctx)
 	id := session.GetString(IdKey)
 	idTime := session.GetInt64Default(IdTimeKey, 0)
+	log.Debug().Msg(fmt.Sprintf("session_id(cookie): %v, user_id: %v, time: %v", session.ID(), id, idTime))
 	lib.Assert(id != "" && idTime != 0 && time.Now().Unix()-idTime <= 86400, "invalid_token", 401)
 	ctx.Values().Set(IdKey, id)
 	ctx.Next()
 }
+
+//func setLogin(ctx)

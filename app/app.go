@@ -33,6 +33,10 @@ func Run(configPath string) {
 	// 初始化 session
 	controllers.InitSession(&config.HTTP.Session)
 
+	// 初始化微信小程序相关配置
+	controllers.WxSecret = config.Wx.Secret
+	controllers.WxAppid = config.Wx.AppID
+
 	// 初始化 Json 设置
 	// 自动转换成小写下划线风格
 	extra.SetNamingStrategy(extra.LowerCaseWithUnderscores)

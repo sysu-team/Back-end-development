@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/kataras/iris/context"
 	"github.com/rs/zerolog/log"
@@ -53,6 +54,7 @@ func NewErrorHandler() context.Handler {
 						break
 					}
 					_, err = ctx.Write(b)
+					log.Debug().Msg(fmt.Sprintf("code: %v, body : %v", res.Code, res.Msg))
 					if err == nil && res.Code < 500 {
 						return
 					}

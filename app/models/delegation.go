@@ -27,13 +27,15 @@ const (
 // 所有字段名字都是小写的
 // TODO: marshal and unmarshal
 type DelegationDoc struct {
-	Publisher   string
-	Receiver    string //
-	Name        string
-	StartTime   time.Time
-	State       DelegationState
-	Reward      float64
-	Description string
+	Publisher      string
+	Receiver       string //
+	Name           string
+	StartTime      int64
+	State          DelegationState
+	Reward         float64
+	Description    string
+	Deadline       int64
+	DelegationType string
 }
 
 type DelegationPreviewDoc struct {
@@ -41,6 +43,7 @@ type DelegationPreviewDoc struct {
 	Description string
 	Id          primitive.ObjectID `json:"id" bson:"_id"`
 	Reward      float64
+	Deadline    int64
 }
 
 // 使用/创建 collection, 初始化子 model
@@ -52,15 +55,17 @@ func NewDelegationModel(db *mongo.Database) *DelegationModel {
 // 创建新的委托
 // 状态未活跃的委托没有接收者
 // 返回委托 did
-func (m *DelegationModel) CreateNewDelegation(publisher, name, description string, reward float64) (did string) {
+func (m *DelegationModel) CreateNewDelegation(publisher, name, description string, reward float64, deadline int64, delegationType string) (did string) {
 	id, err := m.db.Collection(DelegationCollectionName).InsertOne(context.TODO(), DelegationDoc{
 		publisher,
 		"",
 		name,
-		time.Now(),
+		time.Now().Unix(),
 		Active,
 		reward,
 		description,
+		deadline,
+		delegationType,
 	})
 	lib.AssertErr(err)
 	lib.Assert(id != nil, "unknown_error")
@@ -78,7 +83,9 @@ func (m *DelegationModel) GetDelegationPreview(page, limit int64) []DelegationPr
 	cursor, err := m.db.Collection(DelegationCollectionName).
 		Find(
 			context.TODO(),
-			bson.D{},
+			bson.D{
+				{"receiver", ""},
+			},
 			&options.FindOptions{
 				Limit: &limit,
 				Skip:  &offset,

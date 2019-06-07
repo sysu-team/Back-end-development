@@ -41,6 +41,7 @@ func TestInitDB(t *testing.T) {
 		"abc",
 		"wxm",
 		"110",
+		20,
 	})
 
 	if err != nil {
@@ -48,13 +49,7 @@ func TestInitDB(t *testing.T) {
 	}
 	t.Log(res)
 
-	user, err := test.GetUserByName("wxm")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// t.Log(user)
+	user := test.GetUserByName("wxm")
 
 	if user == nil {
 		t.Log("no such user")

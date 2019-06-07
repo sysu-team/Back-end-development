@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/sysu-team/Back-end-development/app/models"
 	"github.com/sysu-team/Back-end-development/lib"
+	"time"
 )
 
 // DelegationService 用户逻辑
@@ -28,6 +29,7 @@ type DelegationPreviewWrapper struct {
 	Name        string
 	Description string
 	Reward      float64
+	Deadline    int64
 }
 
 func (ds *delegationService) GetDelegationPreview(page, limit int) []DelegationPreviewWrapper {
@@ -39,6 +41,7 @@ func (ds *delegationService) GetDelegationPreview(page, limit int) []DelegationP
 			v.Name,
 			v.Description,
 			v.Reward,
+			v.Deadline,
 		})
 	}
 	return res
@@ -55,22 +58,34 @@ type DelegationInfo struct {
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
 	Reward      float64 `json:"reward"`
+	Deadline    int64   `json:"deadline"`
+	Type        string  `json:"type"`
 }
 
 // todo: 基本的检查
 func (ds *delegationService) CreateDelegation(info *DelegationInfo) {
-	ds.model.CreateNewDelegation(info.Publisher, info.Name, info.Description, info.Reward)
+	ds.model.CreateNewDelegation(
+		info.Publisher,
+		info.Name,
+		info.Description,
+		info.Reward,
+		info.Deadline,
+		info.Type)
 }
 
 //  接受委托
 func (ds *delegationService) ReceiveDelegation(receiverID, delegationID string) {
-	// 判断委托接收者是否合法的, 实际上不需要，前面已经通过 withLogin 检验过，只有合法的用户才能 login
-	lib.Assert(ds.isActiveDelegation(delegationID), "invalid_delegation", 401)
+	// 判断委托接收者是否合法的, 委托和接收者不能是同一个人
+	delegation := ds.GetSpecificDelegation(delegationID)
+	lib.Assert(delegation.Publisher != receiverID, "invalid_receiver_same_as_publisher", 401)
+	lib.Assert(delegation.Receiver == "", "invalid_delegation_already_received", 402)
+	lib.Assert(delegation.Deadline < time.Now().Unix(), "invalid_delegation_timeout", 402)
 	ds.model.ReceiveDelegation(delegationID, receiverID)
 }
 
 // 判断这个委托是否处于活跃状态
+// 没有被接受 + 没有过期
 func (ds *delegationService) isActiveDelegation(delegationID string) bool {
-	// todo
-	return true
+	delegation := ds.GetSpecificDelegation(delegationID)
+	return delegation.Deadline < time.Now().Unix() && delegation.Receiver == ""
 }

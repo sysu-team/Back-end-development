@@ -61,11 +61,10 @@ func MatchDelegationID(delegationID string) bool {
 // 创建委托
 // 1. 检验用户是否已经登陆
 // 2. 委托是否合法
-// todo: testing
 func (c *DelegationController) Post() {
 	body := &services.DelegationInfo{}
 	lib.Assert(c.Ctx.ReadJSON(body) == nil, "invalid_params")
-	lib.Assert(body.Publisher == c.Session.Get(IdKey), "invalid_user")
+	body.Publisher = c.Session.GetString(IdKey)
 	c.Server.CreateDelegation(body)
 	c.JSON(200)
 }

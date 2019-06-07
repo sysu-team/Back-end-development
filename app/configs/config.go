@@ -13,6 +13,7 @@ type Config struct {
 	HTTP    HTTPConfig `yaml:"http"`    // HTTP配置
 	Db      DBConfig   `yaml:"db"`      // 数据库配置
 	Util    UtilConfig `yaml:"util"`    // 工具配置
+	Wx      WxConfig   `yaml:"wx"`      // 数据库配置
 }
 
 // HTTPConfig 服务器配置
@@ -34,6 +35,11 @@ type DBConfig struct {
 	DBName   string `yaml:"db"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
+}
+
+type WxConfig struct {
+	AppID  string `yaml:"appid"`
+	Secret string `yaml:"secret"`
 }
 
 // UtilConfig 工具类配置
