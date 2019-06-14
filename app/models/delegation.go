@@ -16,22 +16,24 @@ type DelegationModel struct {
 	db *mongo.Database
 }
 
-type DelegationState uint8
+type EnumDelegationState uint8
 
 const (
-	Active  DelegationState = 0
-	Pending DelegationState = 1
-	Done    DelegationState = 2
+	Published EnumDelegationState = 0
+	Accepted  EnumDelegationState = 1
+	Canceled  EnumDelegationState = 2
+	Pending   EnumDelegationState = 3
+	Done      EnumDelegationState = 4
 )
 
 // 所有字段名字都是小写的
 // TODO: marshal and unmarshal
 type DelegationDoc struct {
 	Publisher      string
-	Receiver       string //
+	Receiver       string
 	Name           string
 	StartTime      int64
-	State          DelegationState
+	State          EnumDelegationState
 	Reward         float64
 	Description    string
 	Deadline       int64
@@ -61,7 +63,7 @@ func (m *DelegationModel) CreateNewDelegation(publisher, name, description strin
 		"",
 		name,
 		time.Now().Unix(),
-		Active,
+		Published,
 		reward,
 		description,
 		deadline,

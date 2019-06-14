@@ -28,13 +28,18 @@ func BindDelegationController(app *iris.Application) {
 }
 
 func (c *DelegationController) BeforeActivation(b mvc.BeforeActivation) {
+	// 获取 delegations
 	b.Handle("GET", "/", "Get")
 	b.Handle("GET", "/{param1:string}", "GetBy")
 	b.Handle("POST", "/", "Post", withLogin)
-	b.Handle("PUT", "/{param1:string}", "Put", withLogin)
+
+	// 接受委托
+	b.Handle("PATCH", "/{param1:string}/accept", "PatchByAccept", withLogin)
+	// todo 取消委托 和 完成委托
 }
 
-// 返回所有活跃的委托
+// 获取委托
+// todo: 新的api, 按 url 中参数进行筛选
 func (c *DelegationController) Get() {
 	log.Debug().Msg(fmt.Sprintf("page : %v, limit: %v", c.Ctx.URLParam("page"), c.Ctx.URLParam("limit")))
 	page, err := strconv.Atoi(c.Ctx.URLParam("page"))
@@ -73,7 +78,7 @@ func (c *DelegationController) Post() {
 // 1. 检验该委托是否存在
 // 2. 检验委托是否已经被接受了
 // 3. 检验是否满足接受的委托的条件( 具体条件待定 ）
-func (c *DelegationController) Put(delegationID string) {
+func (c *DelegationController) PatchByAccept(delegationID string) {
 	c.Server.ReceiveDelegation(c.Session.GetString(IdKey), delegationID)
 	c.JSON(200)
 }

@@ -21,7 +21,7 @@ func NewDelegationService() DelegationService {
 }
 
 type delegationService struct {
-	model *models.DelegationModel
+	delegationModel *models.DelegationModel
 }
 
 type DelegationPreviewWrapper struct {
@@ -33,7 +33,7 @@ type DelegationPreviewWrapper struct {
 }
 
 func (ds *delegationService) GetDelegationPreview(page, limit int) []DelegationPreviewWrapper {
-	tmp := ds.model.GetDelegationPreview(int64(page), int64(limit))
+	tmp := ds.delegationModel.GetDelegationPreview(int64(page), int64(limit))
 	res := make([]DelegationPreviewWrapper, 0, len(tmp))
 	for _, v := range tmp {
 		res = append(res, DelegationPreviewWrapper{
@@ -48,7 +48,7 @@ func (ds *delegationService) GetDelegationPreview(page, limit int) []DelegationP
 }
 
 func (ds *delegationService) GetSpecificDelegation(delegationID string) *models.DelegationDoc {
-	return ds.model.GetSpecificDelegation(delegationID)
+	return ds.delegationModel.GetSpecificDelegation(delegationID)
 }
 
 //// info
@@ -64,7 +64,7 @@ type DelegationInfo struct {
 
 // todo: 基本的检查
 func (ds *delegationService) CreateDelegation(info *DelegationInfo) {
-	ds.model.CreateNewDelegation(
+	ds.delegationModel.CreateNewDelegation(
 		info.Publisher,
 		info.Name,
 		info.Description,
@@ -80,7 +80,7 @@ func (ds *delegationService) ReceiveDelegation(receiverID, delegationID string) 
 	lib.Assert(delegation.Publisher != receiverID, "invalid_receiver_same_as_publisher", 401)
 	lib.Assert(delegation.Receiver == "", "invalid_delegation_already_received", 402)
 	lib.Assert(delegation.Deadline < time.Now().Unix(), "invalid_delegation_timeout", 402)
-	ds.model.ReceiveDelegation(delegationID, receiverID)
+	ds.delegationModel.ReceiveDelegation(delegationID, receiverID)
 }
 
 // 判断这个委托是否处于活跃状态
