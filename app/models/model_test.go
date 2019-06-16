@@ -2,10 +2,6 @@ package models
 
 import (
 	"context"
-	"fmt"
-	"testing"
-	"time"
-
 	"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/app/configs"
 	"github.com/sysu-team/Back-end-development/lib"
@@ -61,25 +57,14 @@ func TestInitDB(t *testing.T) {
 }
 
 func TestRunner(t *testing.T) {
-	initDB("127.0.0.1", "27017", "swsad_weapp")
-	dm := GetModel().Delegation
-	did := dm.CreateNewDelegation("wxm", "wxm's food", "food", 200, 123, "test type")
-	res1 := dm.GetSpecificDelegation(did)
-	log.Debug().Msg(fmt.Sprintf("create delegation: %v", res1.State))
-	dm.ReceiveDelegation(did, "abc")
-	res2 := dm.GetSpecificDelegation(did)
-	log.Debug().Msg(fmt.Sprintf("receive delegation: %v", res2.State))
-	// dm.CancelDelegation(did)
-	// res3 := dm.GetSpecificDelegation(did)
-	// log.Debug().Msg(fmt.Sprintf("cancel delegation: %v", res3.State))
-	// dm.FinishDelegation(did)
-	// res4 := dm.GetSpecificDelegation(did)
-	// log.Debug().Msg(fmt.Sprintf("finish delegation: %v", res4.State))
-	// did2 := dm.CancelDelegation("wxm")
-	// res := dm.GetDelegationPreview(1, 10)
-	// log.Debug().Msg(fmt.Sprintf("len %v, value %v", len(res), res))
-	// res1 := dm.GetSpecificDelegation(did)
-	// log.Debug().Msg(fmt.Sprintf("should get a delegation %v", res1))
+	//initDB("127.0.0.1", "27017", "swsad_weapp")
+	//dm := GetModel().Delegation
+	//did := dm.CreateNewDelegation("wxm", "wxm's food", "food", 200)
+	//res := dm.GetDelegationPreviewByState(1, 10, 0)
+	//log.Debug().Msg(fmt.Sprintf("len %v, value %v", len(res), res))
+	//res1 := dm.GetSpecificDelegation(did)
+	//log.Debug().Msg(fmt.Sprintf("should get a delegation %v", res1))
+
 	//for _, doc:= range res {
 	//	t.Log(doc)
 	// }

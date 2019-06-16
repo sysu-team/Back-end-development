@@ -27,18 +27,17 @@ const (
 	Done      EnumDelegationState = 4
 )
 
-// 所有字段名字都是小写的
-// TODO: marshal and unmarshal
+// 所有字段名字都是小写 + 下划线连接
 type DelegationDoc struct {
-	Publisher      string
-	Receiver       string
-	Name           string
-	StartTime      int64
-	State          EnumDelegationState
-	Reward         float64
-	Description    string
-	Deadline       int64
-	DelegationType string
+	PublisherId     string              `bson:"publisher_id"`
+	ReceiverId      string              `bson:"receiver_id"`
+	DelegationName  string              `bson:"delegation_name"`
+	StartTime       int64               `bson:"start_time"`
+	DelegationState EnumDelegationState `bson:"delegation_state"`
+	Reward          float64             `bson:"reward"`
+	Description     string              `bson:"description"`
+	Deadline        int64               `bson:"deadline"`
+	DelegationType  string              `bson:"delegation_type"`
 }
 
 type DelegationPreviewDoc struct {
@@ -79,7 +78,7 @@ func (m *DelegationModel) CreateNewDelegation(publisher, name, description strin
 // 获取委托预览
 // 按照分页的规格返回特定的委托
 // 长度为0代表没有找到 不会返回 error，只有一个数据来源，error 的处理直接在中间件中处理
-func (m *DelegationModel) GetDelegationPreview(page, limit int64) []DelegationPreviewDoc {
+func (m *DelegationModel) GetDelegationPreviewByState(page, limit int64, state int) []DelegationPreviewDoc {
 	res := make([]DelegationPreviewDoc, 0, limit)
 	//findOption = options.Find()
 	offset := (page - 1) * limit
@@ -87,7 +86,8 @@ func (m *DelegationModel) GetDelegationPreview(page, limit int64) []DelegationPr
 		Find(
 			context.TODO(),
 			bson.D{
-				{"receiver", ""},
+				//{"receiver_id", ""},
+				{"delegation_state", state},
 			},
 			&options.FindOptions{
 				Limit: &limit,

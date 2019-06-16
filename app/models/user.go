@@ -36,7 +36,6 @@ func (m *UserModel) AddUser(newUser *UserDoc) string {
 // 返回nil，代表没有找到对应的用户
 func (m *UserModel) GetUserByName(name string) *UserDoc {
 	return m.findUserBy("name", name)
-
 }
 
 // 返回nil代表没有找到该 openid 对应的用户

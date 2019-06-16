@@ -9,9 +9,9 @@ import (
 
 // DelegationService 用户逻辑
 type DelegationService interface {
-	GetDelegationPreview(page, limit int) []DelegationPreviewWrapper
-	GetSpecificDelegation(delegationID string) *models.DelegationDoc
-	CreateDelegation(info *DelegationInfo)
+	GetDelegationPreview(page, limit, state int) []DelegationPreviewWrapper
+	GetSpecificDelegation(delegationID string) *DelegationInfoWrapper
+	CreateDelegation(info *DelegationInfoReq)
 	ReceiveDelegation(receiverID, delegationID string)
 	CancelDelegation(cancelerID, delegationID string)
 	FinishDelegation(finisherID, delegationID string)
@@ -20,11 +20,13 @@ type DelegationService interface {
 func NewDelegationService() DelegationService {
 	return &delegationService{
 		models.GetModel().Delegation,
+		models.GetModel().User,
 	}
 }
 
 type delegationService struct {
 	delegationModel *models.DelegationModel
+	userModel       *models.UserModel
 }
 
 type DelegationPreviewWrapper struct {
@@ -35,8 +37,8 @@ type DelegationPreviewWrapper struct {
 	Deadline    int64
 }
 
-func (ds *delegationService) GetDelegationPreview(page, limit int) []DelegationPreviewWrapper {
-	tmp := ds.delegationModel.GetDelegationPreview(int64(page), int64(limit))
+func (ds *delegationService) GetDelegationPreview(page, limit, state int) []DelegationPreviewWrapper {
+	tmp := ds.delegationModel.GetDelegationPreviewByState(int64(page), int64(limit), state)
 	res := make([]DelegationPreviewWrapper, 0, len(tmp))
 	for _, v := range tmp {
 		res = append(res, DelegationPreviewWrapper{
@@ -50,12 +52,27 @@ func (ds *delegationService) GetDelegationPreview(page, limit int) []DelegationP
 	return res
 }
 
-func (ds *delegationService) GetSpecificDelegation(delegationID string) *models.DelegationDoc {
-	return ds.delegationModel.GetSpecificDelegation(delegationID)
+type DelegationInfoWrapper struct {
+	models.DelegationDoc
+	PublisherName string
+	ReceiverName  string
+}
+
+func (ds *delegationService) GetSpecificDelegation(delegationID string) *DelegationInfoWrapper {
+	doc := ds.delegationModel.GetSpecificDelegation(delegationID)
+	receiverName := ""
+	if doc.ReceiverId != "" {
+		receiverName = ds.userModel.GetUserByOpenID(doc.ReceiverId).Name
+	}
+	return &DelegationInfoWrapper{
+		*doc,
+		ds.userModel.GetUserByOpenID(doc.PublisherId).Name,
+		receiverName,
+	}
 }
 
 //// info
-type DelegationInfo struct {
+type DelegationInfoReq struct {
 	Publisher string `json:"publisher"`
 	//StartTime time.Time `json:"start_time"`
 	Name        string  `json:"name"`
@@ -66,7 +83,7 @@ type DelegationInfo struct {
 }
 
 // todo: 基本的检查
-func (ds *delegationService) CreateDelegation(info *DelegationInfo) {
+func (ds *delegationService) CreateDelegation(info *DelegationInfoReq) {
 	ds.delegationModel.CreateNewDelegation(
 		info.Publisher,
 		info.Name,
@@ -80,8 +97,8 @@ func (ds *delegationService) CreateDelegation(info *DelegationInfo) {
 func (ds *delegationService) ReceiveDelegation(receiverID, delegationID string) {
 	// 判断委托接收者是否合法的, 委托和接收者不能是同一个人
 	delegation := ds.GetSpecificDelegation(delegationID)
-	lib.Assert(delegation.Publisher != receiverID, "invalid_receiver_same_as_publisher", 401)
-	lib.Assert(delegation.Receiver == "", "invalid_delegation_already_received", 402)
+	lib.Assert(delegation.PublisherId != receiverID, "invalid_receiver_same_as_publisher", 401)
+	lib.Assert(delegation.ReceiverId == "", "invalid_delegation_already_received", 402)
 	lib.Assert(delegation.Deadline < time.Now().Unix(), "invalid_delegation_timeout", 402)
 	ds.delegationModel.ReceiveDelegation(delegationID, receiverID)
 }
@@ -90,7 +107,7 @@ func (ds *delegationService) ReceiveDelegation(receiverID, delegationID string) 
 // 没有被接受 + 没有过期
 func (ds *delegationService) isActiveDelegation(delegationID string) bool {
 	delegation := ds.GetSpecificDelegation(delegationID)
-	return delegation.Deadline < time.Now().Unix() && delegation.Receiver == ""
+	return delegation.Deadline < time.Now().Unix() && delegation.ReceiverId == ""
 }
 
 // 取消委托
