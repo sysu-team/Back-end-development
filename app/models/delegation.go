@@ -27,6 +27,13 @@ const (
 	Done      EnumDelegationState = 4
 )
 
+const (
+	RECEIVER_ID_KEY       string = "receiver_id"
+	PUBLISHER_ID_KEY      string = "publisher_id"
+	DELETAION_ID_KEY      string = "_id"
+	DELEGATAION_STATE_KEY string = "delegation_state"
+)
+
 // 所有字段名字都是小写 + 下划线连接
 type DelegationDoc struct {
 	PublisherID     string              `bson:"publisher_id"`
@@ -41,7 +48,7 @@ type DelegationDoc struct {
 }
 
 type DelegationPreviewDoc struct {
-	Name        string
+	Name        string `json:"delegation_name" bson:"delegation_name"`
 	Description string
 	ID          primitive.ObjectID `json:"id" bson:"_id"`
 	Reward      float64
@@ -86,8 +93,7 @@ func (m *DelegationModel) GetDelegationPreviewByState(page, limit int64, state i
 		Find(
 			context.TODO(),
 			bson.D{
-				//{"receiver_id", ""},
-				{"delegation_state", state},
+				{DELEGATAION_STATE_KEY, state},
 			},
 			&options.FindOptions{
 				Limit: &limit,
@@ -123,13 +129,13 @@ func (m *DelegationModel) ReceiveDelegation(delegationID string, receiverID stri
 	res, err := m.db.Collection(DelegationCollectionName).UpdateOne(
 		context.TODO(),
 		bson.D{{
-			"_id",
+			DELETAION_ID_KEY,
 			objID,
 		}},
 		bson.D{{
 			"$set", bson.D{
-				{"receiver", receiverID},
-				{"delegation_state", 1},
+				{RECEIVER_ID_KEY, receiverID},
+				{DELEGATAION_STATE_KEY, Accepted},
 			},
 		}},
 	)
@@ -223,7 +229,7 @@ func (m *DelegationModel) GetSpecificDelegation(uniqueID string) (d *DelegationD
 	res := m.db.Collection(DelegationCollectionName).FindOne(
 		context.TODO(),
 		bson.D{{
-			"_id",
+			DELETAION_ID_KEY,
 			objID,
 		}},
 	)

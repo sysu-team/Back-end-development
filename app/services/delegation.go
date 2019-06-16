@@ -97,9 +97,9 @@ func (ds *delegationService) CreateDelegation(info *DelegationInfoReq) {
 func (ds *delegationService) ReceiveDelegation(receiverID, delegationID string) {
 	// 判断委托接收者是否合法的, 委托和接收者不能是同一个人
 	delegation := ds.GetSpecificDelegation(delegationID)
-	lib.Assert(delegation.PublisherID != receiverID, "invalid_receiver_same_as_publisher", 401)
-	lib.Assert(delegation.ReceiverID == "", "invalid_delegation_already_received", 402)
-	lib.Assert(delegation.Deadline < time.Now().Unix(), "invalid_delegation_timeout", 402)
+	lib.Assert(delegation.PublisherId != receiverID, "invalid_receiver_same_as_publisher", 401)
+	lib.Assert(delegation.ReceiverId == "", "invalid_delegation_already_received", 402)
+	lib.Assert(delegation.Deadline > time.Now().Unix(), "invalid_delegation_timeout", 403)
 	ds.delegationModel.ReceiveDelegation(delegationID, receiverID)
 }
 
