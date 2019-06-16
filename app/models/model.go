@@ -2,12 +2,13 @@ package models
 
 import (
 	"context"
+	"time"
+
 	"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/app/configs"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"time"
 )
 
 const (
@@ -28,7 +29,7 @@ type Model struct {
 func InitDB(config *configs.DBConfig) error {
 	model = &Model{}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://user:password@localhost:27017/?authSource=admin"))
 	if err != nil {
 		return err
 	}

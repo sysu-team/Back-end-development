@@ -3,13 +3,14 @@ package models
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/lib"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"time"
 )
 
 type DelegationModel struct {
@@ -126,13 +127,69 @@ func (m *DelegationModel) ReceiveDelegation(delegationID string, receiverID stri
 			objID,
 		}},
 		bson.D{{
-			"$set", bson.D{
+			"$inc", bson.D{
 				{"receiver", receiverID},
+				{"state", 1},
 			},
 		}},
 	)
 	lib.AssertErr(err)
 	log.Debug().Msg(fmt.Sprintf("update result: %v", res))
+	return
+}
+
+// 取消委托，不删除
+// 输入delegationID
+// 更新数据库中的委托信息
+//
+// 可能抛出的错误：
+// 1. 不存在该委托
+// 2. 该委托已取消/已结束
+func (m *DelegationModel) CancelDelegation(delegationID string) {
+	objID, err := primitive.ObjectIDFromHex(delegationID)
+	lib.AssertErr(err)
+	res, err := m.db.Collection(DelegationCollectionName).UpdateOne(
+		context.TODO(),
+		bson.D{{
+			"_id",
+			objID,
+		}},
+		bson.D{{
+			"$inc", bson.D{
+				{"state", 2},
+			},
+		}},
+	)
+	lib.AssertErr(err)
+	log.Debug().Msg(fmt.Sprintf("cancel result: %v", res))
+	return
+}
+
+// 完成委托，不删除
+// 输入delegationID
+// 更新数据库中的委托信息
+//
+// 可能抛出的错误：
+// 1. 不存在该委托
+// 2. 该委托已取消/已结束
+
+func (m *DelegationModel) FinishDelegation(delegationID string) {
+	objID, err := primitive.ObjectIDFromHex(delegationID)
+	lib.AssertErr(err)
+	res, err := m.db.Collection(DelegationCollectionName).UpdateOne(
+		context.TODO(),
+		bson.D{{
+			"_id",
+			objID,
+		}},
+		bson.D{{
+			"$inc", bson.D{
+				{"state", 4},
+			},
+		}},
+	)
+	lib.AssertErr(err)
+	log.Debug().Msg(fmt.Sprintf("finish result: %v", res))
 	return
 }
 

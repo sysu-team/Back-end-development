@@ -1,9 +1,10 @@
 package services
 
 import (
+	"time"
+
 	"github.com/sysu-team/Back-end-development/app/models"
 	"github.com/sysu-team/Back-end-development/lib"
-	"time"
 )
 
 // DelegationService 用户逻辑
@@ -12,6 +13,8 @@ type DelegationService interface {
 	GetSpecificDelegation(delegationID string) *models.DelegationDoc
 	CreateDelegation(info *DelegationInfo)
 	ReceiveDelegation(receiverID, delegationID string)
+	CancelDelegation(cancelerID, delegationID string)
+	FinishDelegation(finisherID, delegationID string)
 }
 
 func NewDelegationService() DelegationService {
@@ -88,4 +91,28 @@ func (ds *delegationService) ReceiveDelegation(receiverID, delegationID string) 
 func (ds *delegationService) isActiveDelegation(delegationID string) bool {
 	delegation := ds.GetSpecificDelegation(delegationID)
 	return delegation.Deadline < time.Now().Unix() && delegation.Receiver == ""
+}
+
+// 取消委托
+func (ds *delegationService) CancelDelegation(cancelerID, delegationID string) {
+	// 先检查该用户是否有资格取消该委托,必须发布者本人才能取消
+	delegation := ds.GetSpecificDelegation(delegationID)
+	lib.Assert(delegation.Publisher == cancelerID, "invalid_canceler_not_cancelled_by_pulisher", 401)
+	// TODO:目前似乎还没有用户的分类，如果是管理员应该也可以取消？
+	// 检查该委托是否已经被取消/结束，该情况下无法取消
+	lib.Assert(delegation.State != 2, "invalid_delegation_already_canceled", 402)
+	lib.Assert(delegation.State != 4, "invalid_delegation_already_done", 402)
+	ds.delegationModel.CancelDelegation(delegationID)
+}
+
+// 完成委托
+func (ds *delegationService) FinishDelegation(finisherID, delegationID string) {
+	// 首先检查该用户是否有资格完成该委托，必须接收者本人才能完成
+	delegation := ds.GetSpecificDelegation(delegationID)
+	lib.Assert(delegation.Receiver == finisherID, "invalid_canceler_not_finished_by_receiver", 401)
+	// TODO:发布者可以完成吗？管理员可以完成吗？
+	// 检查该委托是否已经被取消/结束，该情况下无法完成
+	lib.Assert(delegation.State != 2, "invalid_delegation_already_canceled", 402)
+	lib.Assert(delegation.State != 4, "invalid_delegation_already_done", 402)
+	ds.delegationModel.FinishDelegation(delegationID)
 }

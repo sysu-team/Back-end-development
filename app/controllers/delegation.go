@@ -2,12 +2,13 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/mvc"
 	"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/app/services"
 	"github.com/sysu-team/Back-end-development/lib"
-	"strconv"
 )
 
 // UserController 用户控制
@@ -36,6 +37,8 @@ func (c *DelegationController) BeforeActivation(b mvc.BeforeActivation) {
 	// 接受委托
 	b.Handle("PATCH", "/{param1:string}/accept", "PatchByAccept", withLogin)
 	// todo 取消委托 和 完成委托
+	b.Handle("PATCH", "/{param1:sting}/cancel", "PatchByCancel", withLogin)
+	b.Handle("PATCH", "/{param1:sting}/finish", "PatchByFinish", withLogin)
 }
 
 // 获取委托
@@ -80,5 +83,21 @@ func (c *DelegationController) Post() {
 // 3. 检验是否满足接受的委托的条件( 具体条件待定 ）
 func (c *DelegationController) PatchByAccept(delegationID string) {
 	c.Server.ReceiveDelegation(c.Session.GetString(IdKey), delegationID)
+	c.JSON(200)
+}
+
+// 取消委托
+// 1. 检验该委托是否存在
+// 2. 检验委托是否已经被取消/已完成
+func (c *DelegationController) PatchByCancel(delegationID string) {
+	c.Server.CancelDelegation(c.Session.GetString(IdKey), delegationID)
+	c.JSON(200)
+}
+
+// 完成委托
+// 1. 检验该委托是否存在
+// 2. 检验委托是否已经被取消/已完成
+func (c *DelegationController) PatchByFinish(delegationID string) {
+	c.Server.FinishDelegation(c.Session.GetString(IdKey), delegationID)
 	c.JSON(200)
 }
