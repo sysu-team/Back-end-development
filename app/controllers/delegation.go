@@ -37,8 +37,8 @@ func (c *DelegationController) BeforeActivation(b mvc.BeforeActivation) {
 	// 接受委托
 	b.Handle("PUT", "/{param1:string}/accept", "PutByAccept", withLogin)
 	// todo 取消委托 和 完成委托
-	b.Handle("PATCH", "/{param1:sting}/cancel", "PatchByCancel", withLogin)
-	b.Handle("PATCH", "/{param1:sting}/finish", "PatchByFinish", withLogin)
+	b.Handle("PUT", "/{param1:sting}/cancel", "PutByCancel", withLogin)
+	b.Handle("PUT", "/{param1:sting}/finish", "PutByFinish", withLogin)
 }
 
 // 获取委托
@@ -93,7 +93,7 @@ func (c *DelegationController) PutByAccept(delegationID string) {
 // 取消委托
 // 1. 检验该委托是否存在
 // 2. 检验委托是否已经被取消/已完成
-func (c *DelegationController) PatchByCancel(delegationID string) {
+func (c *DelegationController) PutByCancel(delegationID string) {
 	c.Server.CancelDelegation(c.Session.GetString(IdKey), delegationID)
 	c.JSON(200)
 }
@@ -101,7 +101,7 @@ func (c *DelegationController) PatchByCancel(delegationID string) {
 // 完成委托
 // 1. 检验该委托是否存在
 // 2. 检验委托是否已经被取消/已完成
-func (c *DelegationController) PatchByFinish(delegationID string) {
+func (c *DelegationController) PutByFinish(delegationID string) {
 	c.Server.FinishDelegation(c.Session.GetString(IdKey), delegationID)
 	c.JSON(200)
 }

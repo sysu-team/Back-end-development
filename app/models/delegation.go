@@ -29,8 +29,8 @@ const (
 
 // 所有字段名字都是小写 + 下划线连接
 type DelegationDoc struct {
-	PublisherId     string              `bson:"publisher_id"`
-	ReceiverId      string              `bson:"receiver_id"`
+	PublisherID     string              `bson:"publisher_id"`
+	ReceiverID      string              `bson:"receiver_id"`
 	DelegationName  string              `bson:"delegation_name"`
 	StartTime       int64               `bson:"start_time"`
 	DelegationState EnumDelegationState `bson:"delegation_state"`
@@ -43,7 +43,7 @@ type DelegationDoc struct {
 type DelegationPreviewDoc struct {
 	Name        string
 	Description string
-	Id          primitive.ObjectID `json:"id" bson:"_id"`
+	ID          primitive.ObjectID `json:"id" bson:"_id"`
 	Reward      float64
 	Deadline    int64
 }
@@ -127,9 +127,9 @@ func (m *DelegationModel) ReceiveDelegation(delegationID string, receiverID stri
 			objID,
 		}},
 		bson.D{{
-			"$inc", bson.D{
+			"$set", bson.D{
 				{"receiver", receiverID},
-				{"state", 1},
+				{"delegation_state", 1},
 			},
 		}},
 	)
@@ -155,8 +155,8 @@ func (m *DelegationModel) CancelDelegation(delegationID string) {
 			objID,
 		}},
 		bson.D{{
-			"$inc", bson.D{
-				{"state", 2},
+			"$set", bson.D{
+				{"delegation_state", 2},
 			},
 		}},
 	)
@@ -183,8 +183,28 @@ func (m *DelegationModel) FinishDelegation(delegationID string) {
 			objID,
 		}},
 		bson.D{{
-			"$inc", bson.D{
-				{"state", 4},
+			"$set", bson.D{
+				{"delegation_state", 4},
+			},
+		}},
+	)
+	lib.AssertErr(err)
+	log.Debug().Msg(fmt.Sprintf("finish result: %v", res))
+	return
+}
+
+func (m *DelegationModel) SetDelegationState(delegationID string, state uint8) {
+	objID, err := primitive.ObjectIDFromHex(delegationID)
+	lib.AssertErr(err)
+	res, err := m.db.Collection(DelegationCollectionName).UpdateOne(
+		context.TODO(),
+		bson.D{{
+			"_id",
+			objID,
+		}},
+		bson.D{{
+			"$set", bson.D{
+				{"delegation_state", state},
 			},
 		}},
 	)
@@ -196,8 +216,8 @@ func (m *DelegationModel) FinishDelegation(delegationID string) {
 // 获取委托详细情况
 // 根据委托 id 获取委托
 // Object ID 获取和返回
-func (m *DelegationModel) GetSpecificDelegation(uniqueId string) (d *DelegationDoc) {
-	objID, err := primitive.ObjectIDFromHex(uniqueId)
+func (m *DelegationModel) GetSpecificDelegation(uniqueID string) (d *DelegationDoc) {
+	objID, err := primitive.ObjectIDFromHex(uniqueID)
 	lib.AssertErr(err)
 	d = &DelegationDoc{}
 	res := m.db.Collection(DelegationCollectionName).FindOne(
