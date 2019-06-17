@@ -37,8 +37,8 @@ func (c *DelegationController) BeforeActivation(b mvc.BeforeActivation) {
 	// 接受委托
 	b.Handle("PUT", "/{param1:string}/accept", "PutByAccept", withLogin)
 	// todo 取消委托 和 完成委托
-	b.Handle("PUT", "/{param1:sting}/cancel", "PutByCancel", withLogin)
-	b.Handle("PUT", "/{param1:sting}/finish", "PutByFinish", withLogin)
+	b.Handle("PUT", "/{param1:string}/cancel", "PutByCancel", withLogin)
+	b.Handle("PUT", "/{param1:string}/finish", "PutByFinish", withLogin)
 }
 
 // 获取委托
@@ -86,6 +86,7 @@ func (c *DelegationController) Post() {
 // 2. 检验委托是否已经被接受了
 // 3. 检验是否满足接受的委托的条件( 具体条件待定 ）
 func (c *DelegationController) PutByAccept(delegationID string) {
+	lib.Assert(c.Session.GetString(IdKey) != "", "unknown_err")
 	c.Server.ReceiveDelegation(c.Session.GetString(IdKey), delegationID)
 	c.JSON(200)
 }
@@ -94,6 +95,7 @@ func (c *DelegationController) PutByAccept(delegationID string) {
 // 1. 检验该委托是否存在
 // 2. 检验委托是否已经被取消/已完成
 func (c *DelegationController) PutByCancel(delegationID string) {
+	lib.Assert(c.Session.GetString(IdKey) != "", "unknown_err")
 	c.Server.CancelDelegation(c.Session.GetString(IdKey), delegationID)
 	c.JSON(200)
 }
@@ -102,6 +104,7 @@ func (c *DelegationController) PutByCancel(delegationID string) {
 // 1. 检验该委托是否存在
 // 2. 检验委托是否已经被取消/已完成
 func (c *DelegationController) PutByFinish(delegationID string) {
+	lib.Assert(c.Session.GetString(IdKey) != "", "unknown_err")
 	c.Server.FinishDelegation(c.Session.GetString(IdKey), delegationID)
 	c.JSON(200)
 }

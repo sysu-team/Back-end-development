@@ -112,10 +112,13 @@ func (ds *delegationService) isActiveDelegation(delegationID string) bool {
 
 // 取消委托
 func (ds *delegationService) CancelDelegation(cancelerID, delegationID string) {
-	// 先检查该用户是否有资格取消该委托,必须发布者本人才能取消
+	// 先检查该用户是否有资格取消该委托
+	// 对于委托的发布者，可以取消
+	// 对于委托的接受者，可以放弃
 	delegation := ds.GetSpecificDelegation(delegationID)
-	lib.Assert(delegation.PublisherID == cancelerID, "invalid_canceler_not_cancelled_by_pulisher", 401)
+	lib.Assert(delegation.PublisherID == cancelerID || delegation.ReceiverID == cancelerID, "invalid_canceler_not_cancelled_by_pulisher_or_receiver", 401)
 	// TODO:目前似乎还没有用户的分类，如果是管理员应该也可以取消？
+	// TODO:判断委托是否已经过DDL
 	// 检查该委托是否已经被取消/结束，该情况下无法取消
 	lib.Assert(delegation.DelegationState != 2, "invalid_delegation_already_canceled", 402)
 	lib.Assert(delegation.DelegationState != 4, "invalid_delegation_already_done", 402)
@@ -126,10 +129,13 @@ func (ds *delegationService) CancelDelegation(cancelerID, delegationID string) {
 func (ds *delegationService) FinishDelegation(finisherID, delegationID string) {
 	// 首先检查该用户是否有资格完成该委托，必须接收者本人才能完成
 	delegation := ds.GetSpecificDelegation(delegationID)
-	lib.Assert(delegation.ReceiverID == finisherID, "invalid_canceler_not_finished_by_receiver", 401)
-	// TODO:发布者可以完成吗？管理员可以完成吗？
-	// 检查该委托是否已经被取消/结束，该情况下无法完成
-	lib.Assert(delegation.DelegationState != 2, "invalid_delegation_already_canceled", 402)
-	lib.Assert(delegation.DelegationState != 4, "invalid_delegation_already_done", 402)
+	lib.Assert(delegation.PublisherID == finisherID || delegation.ReceiverID == finisherID, "invalid_canceler_not_finished_by_publisher_or_receiver", 401)
+	// 对于不同的用户，检查委托的状态的不同条件
+	if delegation.PublisherID == finisherID {
+		lib.Assert(delegation.DelegationState == 3, "invalid_delegation_not_pending", 402)
+	} else {
+		lib.Assert(delegation.DelegationState == 1, "invalid_delegation_not_accepted", 402)
+	}
+	// TODO:判断委托是否已经过DDL
 	ds.delegationModel.SetDelegationState(delegationID, 4)
 }

@@ -24,7 +24,7 @@ const (
 	Accepted  EnumDelegationState = 1
 	Canceled  EnumDelegationState = 2
 	Pending   EnumDelegationState = 3
-	Done      EnumDelegationState = 4
+	Finished  EnumDelegationState = 4
 )
 
 const (
@@ -144,61 +144,6 @@ func (m *DelegationModel) ReceiveDelegation(delegationID string, receiverID stri
 	return
 }
 
-// 取消委托，不删除
-// 输入delegationID
-// 更新数据库中的委托信息
-//
-// 可能抛出的错误：
-// 1. 不存在该委托
-// 2. 该委托已取消/已结束
-func (m *DelegationModel) CancelDelegation(delegationID string) {
-	objID, err := primitive.ObjectIDFromHex(delegationID)
-	lib.AssertErr(err)
-	res, err := m.db.Collection(DelegationCollectionName).UpdateOne(
-		context.TODO(),
-		bson.D{{
-			"_id",
-			objID,
-		}},
-		bson.D{{
-			"$set", bson.D{
-				{"delegation_state", 2},
-			},
-		}},
-	)
-	lib.AssertErr(err)
-	log.Debug().Msg(fmt.Sprintf("cancel result: %v", res))
-	return
-}
-
-// 完成委托，不删除
-// 输入delegationID
-// 更新数据库中的委托信息
-//
-// 可能抛出的错误：
-// 1. 不存在该委托
-// 2. 该委托已取消/已结束
-
-func (m *DelegationModel) FinishDelegation(delegationID string) {
-	objID, err := primitive.ObjectIDFromHex(delegationID)
-	lib.AssertErr(err)
-	res, err := m.db.Collection(DelegationCollectionName).UpdateOne(
-		context.TODO(),
-		bson.D{{
-			"_id",
-			objID,
-		}},
-		bson.D{{
-			"$set", bson.D{
-				{"delegation_state", 4},
-			},
-		}},
-	)
-	lib.AssertErr(err)
-	log.Debug().Msg(fmt.Sprintf("finish result: %v", res))
-	return
-}
-
 func (m *DelegationModel) SetDelegationState(delegationID string, state uint8) {
 	objID, err := primitive.ObjectIDFromHex(delegationID)
 	lib.AssertErr(err)
@@ -210,12 +155,12 @@ func (m *DelegationModel) SetDelegationState(delegationID string, state uint8) {
 		}},
 		bson.D{{
 			"$set", bson.D{
-				{"delegation_state", state},
+				{DELEGATAION_STATE_KEY, state},
 			},
 		}},
 	)
 	lib.AssertErr(err)
-	log.Debug().Msg(fmt.Sprintf("finish result: %v", res))
+	log.Debug().Msg(fmt.Sprintf("set result: %v", res))
 	return
 }
 
