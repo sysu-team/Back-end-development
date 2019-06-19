@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -29,7 +30,8 @@ type Model struct {
 func InitDB(config *configs.DBConfig) error {
 	model = &Model{}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://user:password@localhost:27017/?authSource=admin"))
+	client, err := mongo.Connect(ctx, options.Client().
+		ApplyURI(fmt.Sprintf("mongodb://%v:%v@%v:%v/?authSource=admin", config.User, config.Password, config.Host, config.Port)))
 	if err != nil {
 		return err
 	}
