@@ -25,6 +25,7 @@ const (
 	Canceled  EnumDelegationState = 2
 	Pending   EnumDelegationState = 3
 	Finished  EnumDelegationState = 4
+	ANY       EnumDelegationState = 0xff
 )
 
 const (
@@ -47,7 +48,7 @@ type DelegationDoc struct {
 	DelegationType  string              `bson:"delegation_type"`
 }
 
-type DelegationPreviewDoc struct {
+type delegationPreviewDoc struct {
 	Name        string `json:"delegation_name" bson:"delegation_name"`
 	Description string
 	ID          primitive.ObjectID `json:"id" bson:"_id"`
@@ -82,44 +83,68 @@ func (m *DelegationModel) CreateNewDelegation(publisher, name, description strin
 	return id.InsertedID.(primitive.ObjectID).Hex()
 }
 
+type DelegationPreviewWrapper struct {
+	Id          string `json:"id"`
+	Name        string
+	Description string
+	Reward      float64
+	Deadline    int64
+}
+
+// with key and value
+type DelegationFilters = bson.D
+
 // 获取委托预览
 // 按照分页的规格返回特定的委托
 // 长度为0代表没有找到 不会返回 error，只有一个数据来源，error 的处理直接在中间件中处理
-func (m *DelegationModel) GetDelegationPreviewByState(page, limit int64, state int) []DelegationPreviewDoc {
-	res := make([]DelegationPreviewDoc, 0, limit)
-	//findOption = options.Find()
-	offset := (page - 1) * limit
-	cursor, err := m.db.Collection(DelegationCollectionName).
-		Find(
-			context.TODO(),
-			bson.D{
-				{DELEGATAION_STATE_KEY, state},
-			},
-			&options.FindOptions{
-				Limit: &limit,
-				Skip:  &offset,
-			})
-	if err == mongo.ErrNilDocument {
-		return res
+func (m *DelegationModel) GetDelegationPreviewByState(page, limit int64, state int) []DelegationPreviewWrapper {
+	return m.getDelegationPreviewListBy(page, limit, DelegationFilters{
+		{DELEGATAION_STATE_KEY, state},
+	})
+}
+
+// 获取用户接受的委托的处于某个状态的委托
+// ANY 意味着对状态没有要求
+// 状态的检查应该再 service 层中完成
+func (m *DelegationModel) GetUserAcceptedDelegationPreviewWithState(page, limit int64, userID string, state EnumDelegationState) []DelegationPreviewWrapper {
+	if state != ANY {
+		return m.getDelegationPreviewListBy(page, limit, DelegationFilters{
+			{RECEIVER_ID_KEY, userID},
+			{DELEGATAION_STATE_KEY, state},
+		})
 	}
-	lib.AssertErr(err)
-	lib.Assert(cursor != nil, "unknown_error", 401)
-	defer func() {
-		lib.AssertErr(cursor.Close(context.TODO()))
-	}()
-	for cursor.Next(context.TODO()) {
-		tmp := DelegationPreviewDoc{}
-		// 这是一个应该直接抛出的错误
-		lib.AssertErr(cursor.Decode(&tmp))
-		res = append(res, tmp)
+	return m.getDelegationPreviewListBy(page, limit, DelegationFilters{
+		{RECEIVER_ID_KEY, userID},
+	})
+}
+
+// 获取用户发布的委托
+func (m *DelegationModel) GetUserPublishDelegationPreviewWithState(page, limit int64, userID string, state EnumDelegationState) []DelegationPreviewWrapper {
+	if state != ANY {
+		return m.getDelegationPreviewListBy(page, limit, DelegationFilters{
+			{PUBLISHER_ID_KEY, userID},
+			{DELEGATAION_STATE_KEY, state},
+		})
 	}
-	return res
+	return m.getDelegationPreviewListBy(page, limit, DelegationFilters{
+		{PUBLISHER_ID_KEY, userID},
+	})
+}
+
+// 获取用户完成的委托
+// 分成两部分
+// 1. 用户发布的 -》 已经完成整个流程了
+// 2. 用户接受的 -》 等待整个流程
+func (m *DelegationModel) GetUserPendingDelegationPreviewWithState(page, limit int64, userID string, state EnumDelegationState) []DelegationPreviewWrapper {
+	return m.getDelegationPreviewListBy(page, limit, DelegationFilters{
+		{RECEIVER_ID_KEY, userID},
+		{DELEGATAION_STATE_KEY, state},
+	})
 }
 
 // 接受委托
 // 输入object id, 和接受委托人
 // 更新数据库中的委托信息
-//
 // 可能抛出的错误：
 // 1. 这是一个已经被接受的委托
 // 2. 不存在该委托
@@ -181,4 +206,38 @@ func (m *DelegationModel) GetSpecificDelegation(uniqueID string) (d *DelegationD
 	lib.Assert(res != nil, "no_such_delegation")
 	lib.Assert(res.Decode(d) == nil, "unknown_error")
 	return
+}
+
+func (m *DelegationModel) getDelegationPreviewListBy(page, limit int64, filters DelegationFilters) []DelegationPreviewWrapper {
+	res := make([]DelegationPreviewWrapper, 0, limit)
+	offset := (page - 1) * limit
+	cursor, err := m.db.Collection(DelegationCollectionName).
+		Find(
+			context.TODO(),
+			filters,
+			&options.FindOptions{
+				Limit: &limit,
+				Skip:  &offset,
+			})
+	if err == mongo.ErrNilDocument {
+		return res
+	}
+	lib.AssertErr(err)
+	lib.Assert(cursor != nil, "unknown_error", 401)
+	defer func() {
+		lib.AssertErr(cursor.Close(context.TODO()))
+	}()
+	for cursor.Next(context.TODO()) {
+		tmp := delegationPreviewDoc{}
+		// 这是一个应该直接抛出的错误
+		lib.AssertErr(cursor.Decode(&tmp))
+		res = append(res, DelegationPreviewWrapper{
+			tmp.ID.Hex(),
+			tmp.Name,
+			tmp.Description,
+			tmp.Reward,
+			tmp.Deadline,
+		})
+	}
+	return res
 }

@@ -9,7 +9,7 @@ import (
 
 // DelegationService 用户逻辑
 type DelegationService interface {
-	GetDelegationPreview(page, limit, state int) []DelegationPreviewWrapper
+	GetDelegationPreview(page, limit, state int) []models.DelegationPreviewWrapper
 	GetSpecificDelegation(delegationID string) *DelegationInfoWrapper
 	CreateDelegation(info *DelegationInfoReq)
 	ReceiveDelegation(receiverID, delegationID string)
@@ -29,27 +29,8 @@ type delegationService struct {
 	userModel       *models.UserModel
 }
 
-type DelegationPreviewWrapper struct {
-	Id          string `json:"id"`
-	Name        string
-	Description string
-	Reward      float64
-	Deadline    int64
-}
-
-func (ds *delegationService) GetDelegationPreview(page, limit, state int) []DelegationPreviewWrapper {
-	tmp := ds.delegationModel.GetDelegationPreviewByState(int64(page), int64(limit), state)
-	res := make([]DelegationPreviewWrapper, 0, len(tmp))
-	for _, v := range tmp {
-		res = append(res, DelegationPreviewWrapper{
-			v.ID.Hex(),
-			v.Name,
-			v.Description,
-			v.Reward,
-			v.Deadline,
-		})
-	}
-	return res
+func (ds *delegationService) GetDelegationPreview(page, limit, state int) []models.DelegationPreviewWrapper {
+	return ds.delegationModel.GetDelegationPreviewByState(int64(page), int64(limit), state)
 }
 
 type DelegationInfoWrapper struct {

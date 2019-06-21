@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/kataras/iris"
+	"github.com/kataras/iris/core/errors"
 	"github.com/kataras/iris/mvc"
 	"github.com/rs/zerolog/log"
+	"github.com/sysu-team/Back-end-development/app/models"
 	"github.com/sysu-team/Back-end-development/app/services"
 	"github.com/sysu-team/Back-end-development/lib"
 	"gopkg.in/resty.v1"
+	"strconv"
 	"time"
 )
 
@@ -35,6 +38,8 @@ func (c *UserController) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("DELETE", "/session", "DelSession", withLogin)
 	b.Handle("GET", "/me", "GetMe", withLogin)
 
+	// 获取用户相关的委托
+	b.Handle("GET", "/delegations", "GetDelegations", withLogin)
 }
 
 type LoginReq struct {
@@ -127,4 +132,38 @@ func (c *UserController) Post() {
 //  已经登陆的用户获取用户信息
 func (c *UserController) GetMe() {
 	c.JSON(200, c.Server.GetUserInfo(c.Session.GetString(IdKey)))
+}
+
+type UserDelegationQueryType int
+
+const (
+	published UserDelegationQueryType = 0
+	accepted  UserDelegationQueryType = 1
+	finished  UserDelegationQueryType = 2
+)
+
+// 获取用户相关的委托
+func (c *UserController) GetDelegations() {
+	log.Debug().Msg(fmt.Sprintf("page : %v, limit: %v, query_type: %v",
+		c.Ctx.URLParam("page"), c.Ctx.URLParam("limit"), c.Ctx.URLParam("query_type")))
+	page, err1 := strconv.Atoi(c.Ctx.URLParam("page"))
+	limit, err2 := strconv.Atoi(c.Ctx.URLParam("limit"))
+	queryType, err3 := strconv.Atoi(c.Ctx.URLParam("query_type"))
+	lib.Assert(err1 == nil && err2 == nil && err3 == nil && page > 0 && limit > 0,
+		"invalid_params")
+	userID := c.Session.GetString(IdKey)
+	var res []models.DelegationPreviewWrapper
+	switch UserDelegationQueryType(queryType) {
+	case published:
+		res = c.Server.GetUserPublishDelegation(page, limit, userID)
+	case accepted:
+		res = c.Server.GetUserReceiveDelegation(page, limit, userID)
+	case finished:
+		res = c.Server.GetUserPendingDelegation(page, limit, userID)
+	default:
+		lib.AssertErr(errors.New("invalid_query_type"), 400)
+	}
+	log.Debug().Msg(fmt.Sprintf("return %v delegtaions with query_type: %v, ",
+		len(res), c.Ctx.URLParam("query_type")))
+	c.JSON(200, res, lib.Page{Page: page, Limit: limit, Total: len(res)})
 }
