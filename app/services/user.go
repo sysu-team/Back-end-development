@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+
 	"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/app/models"
 	"github.com/sysu-team/Back-end-development/lib"
@@ -86,7 +87,7 @@ func (s *userService) GetUserPendingDelegation(page, limit int, receiverUserID s
 
 // 返回用户发布的委托
 func (s *userService) GetUserPublishDelegation(page, limit int, publisherUserID string) []models.DelegationPreviewWrapper {
-	return s.delegationModel.GetUserPublishDelegationPreviewWithState(int64(page), int64(limit), publisherUserID, models.ANY)
+	return s.delegationModel.GetUserPublishDelegationPreviewWithState(int64(page), int64(limit), publisherUserID, models.Published)
 }
 
 // 返回处于接受状态的还没有完成的委托
