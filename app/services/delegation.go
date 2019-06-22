@@ -114,9 +114,11 @@ func (ds *delegationService) FinishDelegation(finisherID, delegationID string) {
 	// 对于不同的用户，检查委托的状态的不同条件
 	if delegation.PublisherID == finisherID {
 		lib.Assert(delegation.DelegationState == 3, "invalid_delegation_not_pending", 402)
+		ds.delegationModel.SetDelegationState(delegationID, 4)
 	} else {
 		lib.Assert(delegation.DelegationState == 1, "invalid_delegation_not_accepted", 402)
+		ds.delegationModel.SetDelegationState(delegationID, 3)
 	}
 	// TODO:判断委托是否已经过DDL
-	ds.delegationModel.SetDelegationState(delegationID, 4)
+	// ds.delegationModel.SetDelegationState(delegationID, 4)
 }
