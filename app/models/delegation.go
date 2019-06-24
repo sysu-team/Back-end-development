@@ -42,7 +42,7 @@ type DelegationDoc struct {
 	DelegationName  string              `bson:"delegation_name"`
 	StartTime       int64               `bson:"start_time"`
 	DelegationState EnumDelegationState `bson:"delegation_state"`
-	Reward          float64             `bson:"reward"`
+	Reward          int                 `bson:"reward"`
 	Description     string              `bson:"description"`
 	Deadline        int64               `bson:"deadline"`
 	DelegationType  string              `bson:"delegation_type"`
@@ -52,7 +52,7 @@ type delegationPreviewDoc struct {
 	Name        string `json:"delegation_name" bson:"delegation_name"`
 	Description string
 	ID          primitive.ObjectID `json:"id" bson:"_id"`
-	Reward      float64
+	Reward      int
 	Deadline    int64
 }
 
@@ -65,7 +65,7 @@ func NewDelegationModel(db *mongo.Database) *DelegationModel {
 // 创建新的委托
 // 状态未活跃的委托没有接收者
 // 返回委托 did
-func (m *DelegationModel) CreateNewDelegation(publisher, name, description string, reward float64, deadline int64, delegationType string) (did string) {
+func (m *DelegationModel) CreateNewDelegation(publisher, name, description string, reward int, deadline int64, delegationType string) (did string) {
 	id, err := m.db.Collection(DelegationCollectionName).InsertOne(context.TODO(), DelegationDoc{
 		publisher,
 		"",
@@ -87,7 +87,7 @@ type DelegationPreviewWrapper struct {
 	Id          string `json:"id"`
 	Name        string
 	Description string
-	Reward      float64
+	Reward      int
 	Deadline    int64
 }
 
@@ -175,7 +175,7 @@ func (m *DelegationModel) SetDelegationState(delegationID string, state uint8) {
 	res, err := m.db.Collection(DelegationCollectionName).UpdateOne(
 		context.TODO(),
 		bson.D{{
-			"_id",
+			DELETAION_ID_KEY,
 			objID,
 		}},
 		bson.D{{

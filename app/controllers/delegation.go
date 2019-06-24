@@ -72,6 +72,7 @@ func MatchDelegationID(delegationID string) bool {
 // 创建委托
 // 1. 检验用户是否已经登陆
 // 2. 委托是否合法
+// 3. 检查用户的积分是否足够冻结
 func (c *DelegationController) Post() {
 	body := &services.DelegationInfoReq{}
 	lib.Assert(c.Ctx.ReadJSON(body) == nil, "invalid_params")
@@ -84,7 +85,7 @@ func (c *DelegationController) Post() {
 // 接受委托
 // 1. 检验该委托是否存在
 // 2. 检验委托是否已经被接受了
-// 3. 检验是否满足接受的委托的条件( 具体条件待定 ）
+// 3. 检验是否满足接受的委托的条件 -- 具体条件积分账户可以被预冻结10个积分
 func (c *DelegationController) PutByAccept(delegationID string) {
 	lib.Assert(c.Session.GetString(IdKey) != "", "unknown_err")
 	c.Server.ReceiveDelegation(c.Session.GetString(IdKey), delegationID)

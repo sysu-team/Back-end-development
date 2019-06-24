@@ -37,7 +37,7 @@ func (s *userService) Register(name, studentNumber, openid string) {
 		OpenID:        openid,
 		Name:          name,
 		StudentNumber: studentNumber,
-		Credit:        0,
+		Credit:        100,
 	})
 }
 

@@ -2,6 +2,8 @@ package models
 
 import (
 	"context"
+	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/lib"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -11,6 +13,11 @@ import (
 type UserModel struct {
 	db *mongo.Database
 }
+
+const (
+	USER_OPEN_ID_KEY string = "open_id"
+	CREDIT_KEY       string = "credit"
+)
 
 // 所有字段名字都是小写的
 type UserDoc struct {
@@ -58,4 +65,23 @@ func (m *UserModel) findUserBy(key, value string) *UserDoc {
 	}
 	lib.AssertErr(err)
 	return res
+}
+
+func (m *UserModel) SetCreditByOpenID(openid string, newCredit int) {
+	// filter := bson.D{{"open_id", openid}}
+	res, err := m.db.Collection(UserCollectionName).UpdateOne(
+		context.TODO(),
+		bson.D{{
+			USER_OPEN_ID_KEY,
+			openid,
+		}},
+		bson.D{{
+			"$set", bson.D{
+				{CREDIT_KEY, newCredit},
+			},
+		}},
+	)
+	lib.AssertErr(err)
+	log.Debug().Msg(fmt.Sprintf("update result :%v", res))
+	return
 }
