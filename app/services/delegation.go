@@ -136,9 +136,13 @@ func (ds *delegationService) FinishDelegation(finisherID, delegationID string) {
 	delegation := ds.GetSpecificDelegation(delegationID)
 	lib.Assert(delegation.PublisherID == finisherID || delegation.ReceiverID == finisherID, "invalid_canceler_not_finished_by_publisher_or_receiver", 401)
 	FinishByPublisher := func() {
-		ds.delegationModel.SetDelegationState(delegationID, 4)
 		receiver := ds.userModel.GetUserByOpenID(delegation.ReceiverID)
-		ds.userModel.SetCreditByOpenID(receiver.OpenID, receiver.Credit+2*delegation.Reward)
+		if delegation.DelegationState == 3 {
+			ds.userModel.SetCreditByOpenID(receiver.OpenID, receiver.Credit+2*delegation.Reward)
+		} else {
+			ds.userModel.SetCreditByOpenID(receiver.OpenID, receiver.Credit+delegation.Reward)
+		}
+		ds.delegationModel.SetDelegationState(delegationID, 4)
 	}
 	// 对于不同的用户，检查委托的状态的不同条件
 	if delegation.PublisherID == finisherID {
