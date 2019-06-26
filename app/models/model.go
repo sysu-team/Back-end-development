@@ -13,17 +13,19 @@ import (
 )
 
 const (
-	UserCollectionName       = "users"
-	DelegationCollectionName = "delegations"
+	UserCollectionName          = "users"
+	DelegationCollectionName    = "delegations"
+	QuestionnaireCollectionName = "questionnaires"
 )
 
 var model *Model
 
 // Model 数据库实例
 type Model struct {
-	DB         *mongo.Database
-	User       *UserModel
-	Delegation *DelegationModel
+	DB            *mongo.Database
+	User          *UserModel
+	Delegation    *DelegationModel
+	Questionnaire *QuestionnaireModel
 }
 
 // 连接到数据库

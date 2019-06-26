@@ -33,12 +33,14 @@ const (
 	PUBLISHER_ID_KEY      string = "publisher_id"
 	DELETAION_ID_KEY      string = "_id"
 	DELEGATAION_STATE_KEY string = "delegation_state"
+	CURRENT_NUMBER_KEY    string = "current_number"
+	MAX_NUMBER_KEY        string = "max_number"
 )
 
 // 所有字段名字都是小写 + 下划线连接
 type DelegationDoc struct {
 	PublisherID     string              `bson:"publisher_id"`
-	ReceiverID      string              `bson:"receiver_id"`
+	ReceiverID      []string            `bson:"receiver_id"`
 	DelegationName  string              `bson:"delegation_name"`
 	StartTime       int64               `bson:"start_time"`
 	DelegationState EnumDelegationState `bson:"delegation_state"`
@@ -46,6 +48,9 @@ type DelegationDoc struct {
 	Description     string              `bson:"description"`
 	Deadline        int64               `bson:"deadline"`
 	DelegationType  string              `bson:"delegation_type"`
+	QuestionnaireID string              `bson:"questionnaire_id"`
+	MaxNumber       int                 `bson:"max_number"`
+	CurrentNumber   int                 `bson:"current_number"`
 }
 
 type delegationPreviewDoc struct {
@@ -65,10 +70,11 @@ func NewDelegationModel(db *mongo.Database) *DelegationModel {
 // 创建新的委托
 // 状态未活跃的委托没有接收者
 // 返回委托 did
-func (m *DelegationModel) CreateNewDelegation(publisher, name, description string, reward int, deadline int64, delegationType string) (did string) {
+func (m *DelegationModel) CreateNewDelegation(publisher, name, description string, reward int, deadline int64, delegationType string, qid string, max int) (did string) {
+	var receivers []string
 	id, err := m.db.Collection(DelegationCollectionName).InsertOne(context.TODO(), DelegationDoc{
 		publisher,
-		"",
+		receivers,
 		name,
 		time.Now().Unix(),
 		Published,
@@ -76,6 +82,9 @@ func (m *DelegationModel) CreateNewDelegation(publisher, name, description strin
 		description,
 		deadline,
 		delegationType,
+		qid,
+		max,
+		0,
 	})
 	lib.AssertErr(err)
 	lib.Assert(id != nil, "unknown_error")
@@ -148,7 +157,7 @@ func (m *DelegationModel) GetUserPendingDelegationPreviewWithState(page, limit i
 // 可能抛出的错误：
 // 1. 这是一个已经被接受的委托
 // 2. 不存在该委托
-func (m *DelegationModel) ReceiveDelegation(delegationID string, receiverID string) {
+func (m *DelegationModel) ReceiveDelegation(delegationID string, receiverID string, state uint8) {
 	objID, err := primitive.ObjectIDFromHex(delegationID)
 	lib.AssertErr(err)
 	res, err := m.db.Collection(DelegationCollectionName).UpdateOne(
@@ -157,12 +166,23 @@ func (m *DelegationModel) ReceiveDelegation(delegationID string, receiverID stri
 			DELETAION_ID_KEY,
 			objID,
 		}},
-		bson.D{{
-			"$set", bson.D{
-				{RECEIVER_ID_KEY, receiverID},
-				{DELEGATAION_STATE_KEY, Accepted},
+		bson.D{
+			{
+				"$addToSet", bson.D{
+					{RECEIVER_ID_KEY, receiverID},
+				},
 			},
-		}},
+			{
+				"$set", bson.D{
+					{DELEGATAION_STATE_KEY, state},
+				},
+			},
+			{
+				"$inc", bson.D{
+					{CURRENT_NUMBER_KEY, 1},
+				},
+			},
+		},
 	)
 	lib.AssertErr(err)
 	log.Debug().Msg(fmt.Sprintf("update result: %v", res))
@@ -240,4 +260,37 @@ func (m *DelegationModel) getDelegationPreviewListBy(page, limit int64, filters 
 		})
 	}
 	return res
+}
+
+// 问卷的接受者取消/完成，将最大人数和当前人数各减一，同时将取消/完成者从列表中删除
+func (m *DelegationModel) DeleteReceiver(delegationID, userID string, newState uint8) {
+	objID, err := primitive.ObjectIDFromHex(delegationID)
+	lib.AssertErr(err)
+	res, err := m.db.Collection(DelegationCollectionName).UpdateOne(
+		context.TODO(),
+		bson.D{{
+			DELETAION_ID_KEY,
+			objID,
+		}},
+		bson.D{
+			{
+				"$pull", bson.D{
+					{RECEIVER_ID_KEY, userID},
+				},
+			},
+			{
+				"$set", bson.D{
+					{DELEGATAION_STATE_KEY, newState},
+				},
+			},
+			{
+				"$inc", bson.D{
+					{CURRENT_NUMBER_KEY, -1},
+					{MAX_NUMBER_KEY, -1},
+				},
+			},
+		},
+	)
+	lib.AssertErr(err)
+	log.Debug().Msg(fmt.Sprintf("DeleteReceiver result: %v", res))
 }
