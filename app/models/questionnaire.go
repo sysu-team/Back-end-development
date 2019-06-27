@@ -122,12 +122,6 @@ func (m *QuestionnaireModel) GetFullQuestionnaire(qid string) (q *QuestionnaireD
 // 输入为一个QuestionnaireDoc
 // 不返回参数
 func (m *QuestionnaireModel) AddOneRecord(qid string, questions []Question) {
-	// q := QuestionnaireDoc{
-	// 	title,
-	// 	questions,
-	// }
-	// errMarshal := json.Unmarshal([]byte(inputJson), q)
-	// lib.AssertErr(errMarshal)
 	objID, err := primitive.ObjectIDFromHex(qid)
 	lib.AssertErr(err)
 	res, err := m.db.Collection(QuestionnaireCollectionName).UpdateOne(
@@ -145,59 +139,5 @@ func (m *QuestionnaireModel) AddOneRecord(qid string, questions []Question) {
 	)
 	lib.AssertErr(err)
 	log.Debug().Msg(fmt.Sprintf("set result: %v", res))
-	return
-	// stringHead := strings.Join([]string{QUESTION_KEY, ".", ANSWER_KEY}, "")
-	// stringOption := strings.Join([]string{stringHead, ".", OPTION_KEY}, "")
-	// stringNew := strings.Join([]string{QUESTION_KEY, ".$.", ANSWER_KEY}, "")
-	//log.Debug().Msg(fmt.Sprintf("option: %v count: %v", stringOption, stringCount))
-	// for _, tempQuestion := range q.Questions {
-	// 	for _, tempAnswer := range tempQuestion.Answers {
-	// 		if tempAnswer.Count != 0 {
-	// 			filter := bson.D{
-	// 				{QUESTIONNAIRE_ID_KEY, objID},
-	// 				{stringOption, tempAnswer.Option},
-	// 			}
-	// 			// updater := bson.D{{
-	// 			// 	"$inc", bson.D{
-	// 			// 		{stringCount, tempAnswer.Count},
-	// 			// 	},
-	// 			// }}
-	// 			res := m.db.Collection(QuestionnaireCollectionName).FindOne(
-	// 				context.TODO(),
-	// 				filter,
-	// 			)
-	// 			newAnswer := &Answer{}
-	// 			lib.Assert(res != nil, "no_such_answer")
-	// 			lib.Assert(res.Decode(newAnswer) == nil, "unknown_error")
-	// 			newAnswer.Count += tempAnswer.Count
-	// 			deleter := bson.D{{
-	// 				"$pull", bson.D{{
-	// 					stringNew,
-	// 					newAnswer,
-	// 				}},
-	// 			}}
-	// 			newer := bson.D{{
-	// 				"$push", bson.D{{
-	// 					stringNew,
-	// 					newAnswer,
-	// 				}},
-	// 			}}
-	// 			res2, err2 := m.db.Collection(QuestionnaireCollectionName).UpdateOne(
-	// 				context.TODO(),
-	// 				filter,
-	// 				deleter,
-	// 			)
-	// 			lib.AssertErr(err2)
-	// 			log.Debug().Msg(fmt.Sprintf("update result: %v", res2))
-	// 			res3, err3 := m.db.Collection(QuestionnaireCollectionName).UpdateOne(
-	// 				context.TODO(),
-	// 				filter,
-	// 				newer,
-	// 			)
-	// 			lib.AssertErr(err3)
-	// 			log.Debug().Msg(fmt.Sprintf("update result: %v", res3))
-	// 		}
-	// 	}
-	// }
 	return
 }

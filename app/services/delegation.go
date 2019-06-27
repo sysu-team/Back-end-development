@@ -74,8 +74,6 @@ func (ds *delegationService) CreateDelegation(info *DelegationInfoReq) {
 	publisher := ds.userModel.GetUserByOpenID(info.Publisher)
 	newCredit := publisher.Credit - info.MaxNumber*info.Reward
 	lib.Assert(newCredit >= 0, "no_enough_credit_to_create_delegation", 401)
-	// log.Debug().Msg(fmt.Sprintf("questionnaire: %+v", info.Questionnaire))
-	// log.Debug().Msg(fmt.Sprintf("answers: %+v", info.Questionnaire.Questions[0].Answers))
 	var qid string
 	if info.Type == "填写问卷" {
 		qid = ds.questionnaireModel.CreateNewQuestionnaire(info.Questionnaire)

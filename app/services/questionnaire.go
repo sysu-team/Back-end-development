@@ -10,7 +10,6 @@ import (
 type QuestionnaireService interface {
 	GetQuestionnairePreview(delegationID string) *models.SimpleQuestionnaire
 	GetFullQuestionnaire(userID, delegationID string) *models.QuestionnaireDoc
-	// CreateQuestionnaire(doc *models.QuestionnaireDoc)
 	AddRecord(userID, delegationID string, doc *QuestionnaireInfo)
 }
 
@@ -63,7 +62,6 @@ func (qs *questionnaireService) AddRecord(userID, delegationID string, doc *Ques
 		}
 	}
 	lib.Assert(flag == 1, "invalid_not_add_by_current_receiver", 401)
-	// log.Debug().Msg(fmt.Sprintf("填写的问卷: %+v", doc))
 	oldQuestionnaire := qs.questionnaireModel.GetFullQuestionnaire(delegation.QuestionnaireID)
 	for questionIndex, tempQuestion := range doc.Questions {
 		for answerIndex, tempAnswer := range tempQuestion.Answers {
