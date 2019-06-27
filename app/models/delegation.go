@@ -71,7 +71,7 @@ func NewDelegationModel(db *mongo.Database) *DelegationModel {
 // 状态未活跃的委托没有接收者
 // 返回委托 did
 func (m *DelegationModel) CreateNewDelegation(publisher, name, description string, reward int, deadline int64, delegationType string, qid string, max int) (did string) {
-	var receivers []string
+	var receivers = make([]string, 0, max)
 	id, err := m.db.Collection(DelegationCollectionName).InsertOne(context.TODO(), DelegationDoc{
 		publisher,
 		receivers,

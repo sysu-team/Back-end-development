@@ -27,7 +27,8 @@ type questionnaireService struct {
 }
 
 type QuestionnaireInfo struct {
-	questionnaireModel *models.QuestionnaireDoc
+	Title     string            `json:"Title"`
+	Questions []models.Question `json:"questions"`
 }
 
 // 获得用于填写的问卷，只包含问题，不包含统计数据
@@ -62,5 +63,13 @@ func (qs *questionnaireService) AddRecord(userID, delegationID string, doc *Ques
 		}
 	}
 	lib.Assert(flag == 1, "invalid_not_add_by_current_receiver", 401)
-	qs.questionnaireModel.AddOneRecord(delegation.QuestionnaireID, doc.questionnaireModel)
+	// log.Debug().Msg(fmt.Sprintf("填写的问卷: %+v", doc))
+	oldQuestionnaire := qs.questionnaireModel.GetFullQuestionnaire(delegation.QuestionnaireID)
+	for questionIndex, tempQuestion := range doc.Questions {
+		for answerIndex, tempAnswer := range tempQuestion.Answers {
+			oldQuestionnaire.Questions[questionIndex].Answers[answerIndex].Count += tempAnswer.Count
+		}
+	}
+
+	qs.questionnaireModel.AddOneRecord(delegation.QuestionnaireID, oldQuestionnaire.Questions)
 }

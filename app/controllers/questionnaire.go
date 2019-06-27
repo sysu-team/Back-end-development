@@ -1,12 +1,12 @@
 package controllers
 
 import (
-	//"fmt"
+	"fmt"
 	//"strconv"
 
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/mvc"
-	//"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/app/services"
 	"github.com/sysu-team/Back-end-development/lib"
 )
@@ -38,20 +38,19 @@ func (c *QuestionnaireController) Put(delegationID string) {
 	lib.Assert(c.Session.GetString(IdKey) != "", "unknown_err")
 	questionnaire := &services.QuestionnaireInfo{}
 	lib.Assert(c.Ctx.ReadJSON(questionnaire) == nil, "invalid_params")
+	log.Debug().Msg(fmt.Sprintf("Controller 填写的问卷: %+v", questionnaire))
 	c.Server.AddRecord(c.Session.GetString(IdKey), delegationID, questionnaire)
 	c.JSON(200)
 }
 
 // 获得问卷的题目，用于填写
 func (c *QuestionnaireController) Get(delegationID string) {
-	c.Server.GetQuestionnairePreview(delegationID)
-	c.JSON(200)
+	c.JSON(200, c.Server.GetQuestionnairePreview(delegationID))
 }
 
 // 获得问卷以及统计信息
 // 1. 检查用户是否发布者
 func (c *QuestionnaireController) GetResult(delegationID string) {
 	lib.Assert(c.Session.GetString(IdKey) != "", "unknown_err")
-	c.Server.GetFullQuestionnaire(c.Session.GetString(IdKey), delegationID)
-	c.JSON(200)
+	c.JSON(200, c.Server.GetFullQuestionnaire(c.Session.GetString(IdKey), delegationID))
 }

@@ -1,10 +1,10 @@
 package services
 
 import (
-	"fmt"
+	//"fmt"
 	"time"
 
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/app/models"
 	"github.com/sysu-team/Back-end-development/lib"
 )
@@ -64,8 +64,8 @@ type DelegationInfoReq struct {
 	Reward        int                      `json:"reward"`
 	Deadline      int64                    `json:"deadline"`
 	Type          string                   `json:"type"`
-	MaxNumber     int                      `json:max_number`
-	Questionnaire *models.QuestionnaireDoc `json:questionnaire`
+	MaxNumber     int                      `json:"max_number"`
+	Questionnaire *models.QuestionnaireDoc `json:"questionnaire"`
 }
 
 // todo: 基本的检查
@@ -76,7 +76,10 @@ func (ds *delegationService) CreateDelegation(info *DelegationInfoReq) {
 	lib.Assert(newCredit >= 0, "no_enough_credit_to_create_delegation", 401)
 	// log.Debug().Msg(fmt.Sprintf("questionnaire: %+v", info.Questionnaire))
 	// log.Debug().Msg(fmt.Sprintf("answers: %+v", info.Questionnaire.Questions[0].Answers))
-	qid := ds.questionnaireModel.CreateNewQuestionnaire(info.Questionnaire)
+	var qid string
+	if info.Type == "填写问卷" {
+		qid = ds.questionnaireModel.CreateNewQuestionnaire(info.Questionnaire)
+	}
 	ds.delegationModel.CreateNewDelegation(
 		info.Publisher,
 		info.Name,
@@ -125,14 +128,13 @@ func (ds *delegationService) CancelDelegation(cancelerID, delegationID string) {
 	// 对于委托的发布者，可以取消
 	// 对于委托的接受者，可以放弃
 	delegation := ds.GetSpecificDelegation(delegationID)
-	lib.Assert(delegation.PublisherID == cancelerID, "invalid_canceler_not_cancelled_by_pulisher_or_receiver", 401)
 	flag := 0
 	for _, tempReceiverID := range delegation.ReceiverID {
 		if tempReceiverID == cancelerID {
 			flag = 1
 		}
 	}
-	lib.Assert(flag == 1, "invalid_cancel_not_receiver")
+	lib.Assert(delegation.PublisherID == cancelerID || flag == 1, "invalid_canceler_not_cancelled_by_pulisher_or_receiver")
 	// 检查该委托是否能被取消
 	lib.Assert(delegation.DelegationState == 0 || delegation.DelegationState == 1, "invalid_delegation_state_cannot_be_canceled", 402)
 	publisher := ds.userModel.GetUserByOpenID(delegation.PublisherID)
