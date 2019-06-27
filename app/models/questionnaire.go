@@ -60,9 +60,6 @@ func NewQuestionnaireModel(db *mongo.Database) *QuestionnaireModel {
 // 创建一个新的问卷
 // 输入参数为问卷的json数据，将json数据转换成一个string，调用unmarshal来解析
 func (m *QuestionnaireModel) CreateNewQuestionnaire(q *QuestionnaireDoc) (qid string) {
-	// questionnaire := QuestionnaireDoc{}
-	// errMarshal := json.Unmarshal([]byte(inputJson), questionnaire)
-	// lib.AssertErr(errMarshal)
 	id, errInsert := m.db.Collection(QuestionnaireCollectionName).InsertOne(context.TODO(), q)
 	lib.AssertErr(errInsert)
 	lib.Assert(id != nil, "unknown_error")

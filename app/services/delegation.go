@@ -1,8 +1,10 @@
 package services
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/app/models"
 	"github.com/sysu-team/Back-end-development/lib"
 )
@@ -68,11 +70,13 @@ type DelegationInfoReq struct {
 
 // todo: 基本的检查
 func (ds *delegationService) CreateDelegation(info *DelegationInfoReq) {
-	qid := ds.questionnaireModel.CreateNewQuestionnaire(info.Questionnaire)
 	// 检查积分是否满足要求
 	publisher := ds.userModel.GetUserByOpenID(info.Publisher)
 	newCredit := publisher.Credit - info.MaxNumber*info.Reward
 	lib.Assert(newCredit >= 0, "no_enough_credit_to_create_delegation", 401)
+	// log.Debug().Msg(fmt.Sprintf("questionnaire: %+v", info.Questionnaire))
+	// log.Debug().Msg(fmt.Sprintf("answers: %+v", info.Questionnaire.Questions[0].Answers))
+	qid := ds.questionnaireModel.CreateNewQuestionnaire(info.Questionnaire)
 	ds.delegationModel.CreateNewDelegation(
 		info.Publisher,
 		info.Name,

@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/app/models"
 	"github.com/sysu-team/Back-end-development/lib"
 )
@@ -34,6 +36,7 @@ type QuestionnaireInfo struct {
 func (qs *questionnaireService) GetQuestionnairePreview(delegationID string) *models.SimpleQuestionnaire {
 	delegation := qs.delegationModel.GetSpecificDelegation(delegationID)
 	qid := delegation.QuestionnaireID
+	log.Debug().Msg(fmt.Sprintf("不带统计的问卷: %+v", qs.questionnaireModel.GetQuestionnaire(qid)))
 	return qs.questionnaireModel.GetQuestionnaire(qid)
 }
 

@@ -19,7 +19,7 @@ type QuestionnaireController struct {
 
 // 绑定问卷控制器
 func BindQuestionnaireController(app *iris.Application) {
-	questionnaireRoute := mvc.New(app.Party("/questionnnaire"))
+	questionnaireRoute := mvc.New(app.Party("/questionnaire"))
 
 	questionnaireRoute.Register(services.NewQuestionnaireService(), getSession().Start)
 	questionnaireRoute.Handle(new(QuestionnaireController))

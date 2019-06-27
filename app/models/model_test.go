@@ -2,12 +2,15 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/sysu-team/Back-end-development/app/configs"
 	"github.com/sysu-team/Back-end-development/lib"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"testing"
+	"time"
 )
 
 func initDB(host, port, dbname string) {
@@ -58,19 +61,30 @@ func TestInitDB(t *testing.T) {
 
 func TestRunner(t *testing.T) {
 	initDB("127.0.0.1", "27017", "swsad_weapp")
-	dm := GetModel().Delegation
-	did := dm.CreateNewDelegation("wxm", "wxm's food", "food", 200, 123, "test type")
-	res1 := dm.GetSpecificDelegation(did)
-	log.Debug().Msg(fmt.Sprintf("create delegation: %v", res1.DelegationState))
-	dm.ReceiveDelegation(did, "abc")
-	res2 := dm.GetSpecificDelegation(did)
-	log.Debug().Msg(fmt.Sprintf("receive delegation: %v", res2.DelegationState))
-	dm.CancelDelegation(did)
-	res3 := dm.GetSpecificDelegation(did)
-	log.Debug().Msg(fmt.Sprintf("cancel delegation: %v", res3.DelegationState))
-	dm.FinishDelegation(did)
-	res4 := dm.GetSpecificDelegation(did)
-	log.Debug().Msg(fmt.Sprintf("finish delegation: %v", res4.DelegationState))
+	// dm := GetModel().Delegation
+
+	ds := GetModel().Questionnaire
+
+	qid := ds.CreateNewQuestionnaire()
+
+	log.Debug().Msg(fmt.Sprintf("create qid = %v", qid))
+
+	// inputJson := `
+
+	// `
+
+	// did := dm.CreateNewDelegation("wxm", "wxm's food", "food", 200, 123, "test type")
+	// res1 := dm.GetSpecificDelegation(did)
+	// log.Debug().Msg(fmt.Sprintf("create delegation: %v", res1.DelegationState))
+	// dm.ReceiveDelegation(did, "abc")
+	// res2 := dm.GetSpecificDelegation(did)
+	// log.Debug().Msg(fmt.Sprintf("receive delegation: %v", res2.DelegationState))
+	// dm.CancelDelegation(did)
+	// res3 := dm.GetSpecificDelegation(did)
+	// log.Debug().Msg(fmt.Sprintf("cancel delegation: %v", res3.DelegationState))
+	// dm.FinishDelegation(did)
+	// res4 := dm.GetSpecificDelegation(did)
+	// log.Debug().Msg(fmt.Sprintf("finish delegation: %v", res4.DelegationState))
 	// did2 := dm.CancelDelegation("wxm")
 	// res := dm.GetDelegationPreview(1, 10)
 	// log.Debug().Msg(fmt.Sprintf("len %v, value %v", len(res), res))

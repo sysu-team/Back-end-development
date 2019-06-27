@@ -69,6 +69,7 @@ func NewApp() *iris.Application {
 	app.Use(lib.NewErrorHandler())
 	BindUserController(app)
 	BindDelegationController(app)
+	BindQuestionnaireController(app)
 	return app
 }
 

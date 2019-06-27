@@ -46,6 +46,7 @@ func InitDB(config *configs.DBConfig) error {
 	model.DB = client.Database(config.DBName)
 	model.User = NewUserModel(model.DB)
 	model.Delegation = NewDelegationModel(model.DB)
+	model.Questionnaire = NewQuestionnaireModel(model.DB)
 
 	return nil
 }
